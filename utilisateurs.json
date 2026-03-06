@@ -1,0 +1,17 @@
+{
+    "admin": {
+        "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+        "role": "admin",
+        "nom": "Chef Maintenance"
+    },
+    "receptionniste": {
+        "password": "4808c93f4267dab8d320d863c206661b967a2558c2d81d56d3b01c9c9c0b3e6c",
+        "role": "receptionniste",
+        "nom": "Receptionniste"
+    },
+    "maintenance": {
+        "password": "5c528365ac27f26d4474fcb0b625368313703b6dc240cdc24f950b91d61a5e31",
+        "role": "maintenance",
+        "nom": "Agent Maintenance"
+    }
+}

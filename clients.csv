@@ -1,0 +1,6 @@
+id,nom,chambre,date_arrivee,date_depart,nbre_nuits,telephone,email,actif
+1,BEN SLAMA FATEN,1001,2026-03-06,2026-03-31,25.0,,,False
+2,BEN SLAMA FATEN,1001,2026-03-06,2026-03-23,,,,False
+3,mounir,1001,2026-03-06,2026-03-17,,,,False
+4,BEN SLAMA FATEN,1001,2026-03-06,2026-03-20,,,,False
+5,BEN SLAMA FATEN,1001,2026-03-06,2026-03-10,,,,True
