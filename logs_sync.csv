@@ -1,0 +1,46 @@
+timestamp,action,details,status
+2026-03-03 11:56:30,SYNCHRONISATION,Mise à jour de 10 chambres,success
+2026-03-03 12:21:30,SYNCHRONISATION,Mise à jour de 10 chambres,success
+2026-03-03 13:18:59,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:19:12,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:19:16,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:19:52,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:23:31,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:23:33,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:23:44,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:23:57,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:28:51,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:28:56,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:28:59,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:29:49,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:30:55,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:31:58,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:32:08,CARDLOCK,Application CardLock lancee,success
+2026-03-03 13:33:47,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:33:51,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 13:33:54,SYNCHRONISATION,Mise a jour de 10 chambres,success
+2026-03-03 14:22:57,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success
+2026-03-03 14:23:00,CARDLOCK,Application CardLock lancee,success
+2026-03-03 14:28:58,CARDLOCK,Application CardLock lancee,success
+2026-03-03 14:29:20,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success
+2026-03-03 14:47:04,CARDLOCK,Application CardLock lancee depuis Controle Serrures,success
+2026-03-03 14:47:54,CARDLOCK,Application CardLock lancee depuis Controle Serrures,success
+2026-03-03 14:48:02,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:48:05,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:51:45,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success
+2026-03-03 14:51:54,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:51:56,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:51:57,CARDLOCK,Application CardLock lancee depuis Controle Serrures,success
+2026-03-03 14:52:00,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:52:22,CARDLOCK,Application CardLock lancee depuis Controle Serrures,success
+2026-03-03 14:52:42,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:52:44,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:52:50,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-03 14:52:53,MAJ CHAMBRE,Chambre 101 -> Occupée,success
+2026-03-03 14:52:53,SERRURE,Chambre 101 verrouillee,success
+2026-03-03 14:52:55,MAJ CHAMBRE,Chambre 101 -> Libre,success
+2026-03-03 14:52:55,SERRURE,Chambre 101 deverrouillee,success
+2026-03-03 14:53:06,SYNC CARDLOCK,Synchronisation simulee,warning
+2026-03-04 11:08:58,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success
+2026-03-04 11:42:07,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success
+2026-03-04 12:02:39,SYNCHRONISATION,Mise a jour de 10 chambres (simule),success

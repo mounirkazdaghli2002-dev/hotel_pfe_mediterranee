@@ -1,0 +1,4 @@
+id,chambre,description,assigned_to,statut,date_creation,date_completion,created_by
+1,1001,"gaz
+",Agent Maintenance,Terminé,2026-03-06 03:15,2026-03-06 03:24,Chef Maintenance
+2,1001,gaz,Agent Maintenance,En attente,2026-03-06 03:23,,Chef Maintenance
