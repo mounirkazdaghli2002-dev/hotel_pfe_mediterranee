@@ -1,21 +1,19 @@
-# TODO - Session Persistence & Real-time Notifications
+# Environment Variables Implementation TODO
 
-## ✅ Completed
+## Status: [ ] In Progress
 
-## 📋 Pending Tasks
+### Steps:
+1. [x] Update requirements.txt (add python-dotenv==1.0.1)
+2. [x] Create .env.example with template vars
+3. [x] Update .gitignore (.env, *.db)
+4. [x] Update config.yml with env var documentation
+5. [x] Create .streamlit/secrets.toml for Streamlit secrets
+6. [x] Edit app.py: add load_dotenv(), use os.getenv for file paths
+7. [x] Edit init_db.py: use DB_PATH=os.getenv()
+8. [x] Edit check_db.py: use DB_PATH=os.getenv()
+9. [x] Run `pip install -r requirements.txt`
+10. [x] Test: copy .env.example to .env, edit if needed, run app.py (local success, deployment needs git push)
+11. [ ] Mark complete, remove TODO.md
 
-### 1. Session Persistence (Stay logged in on refresh)
-- [ ] Improve session restoration mechanism to check session BEFORE showing login page
-- [ ] Use query parameters or hidden input field more reliably
-- [ ] Make session restoration happen automatically without user intervention
-
-### 2. Real-time Notifications (No page refresh needed)
-- [ ] Create a simple API endpoint for checking notifications without full page rerun
-- [ ] Implement JavaScript polling that directly fetches notification data
-- [ ] Show real-time toast/alert when admin assigns a task to agent
-- [ ] Auto-refresh notification display without page reload
-
-## Implementation Notes:
-- Session persistence: Use st.query_params for reliable session restoration
-- Real-time notifications: Use JavaScript fetch API to poll notifications.json directly
+**Instructions:** Edit this file as steps complete. Use `[x]` for done.
 

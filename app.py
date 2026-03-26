@@ -5,6 +5,9 @@ import json
 from datetime import datetime
 import hashlib
 import base64
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # ============================================
 # CONFIGURATION PAGE
@@ -214,12 +217,13 @@ if (document.readyState === 'complete') {
 """, unsafe_allow_html=True)
 
 # ============================================
-# GESTION DES FICHIERS
+# GESTION DES FICHIERS (CONFIGURABLE VIA .env)
 # ============================================
-USERS_FILE = "utilisateurs.json"
-ROOMS_FILE = "chambres.csv"
-MAINTENANCE_FILE = "maintenance_tasks.csv"
-NOTIFICATIONS_FILE = "notifications.json"
+DATA_DIR = os.getenv('DATA_DIR', '.')
+USERS_FILE = os.path.join(DATA_DIR, 'utilisateurs.json')
+ROOMS_FILE = os.path.join(DATA_DIR, 'chambres.csv')
+MAINTENANCE_FILE = os.path.join(DATA_DIR, 'maintenance_tasks.csv')
+NOTIFICATIONS_FILE = os.path.join(DATA_DIR, 'notifications.json')
 
 def play_notification_sound():
     """Joue un son de notification (JavaScript universel)"""

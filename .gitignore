@@ -3,3 +3,12 @@ build/
 *.exe
 *.pkg
 
+# Environment
+.env
+.env.local
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+*.db
+!hotel_mediterranee.db  # Keep main DB if needed
+
