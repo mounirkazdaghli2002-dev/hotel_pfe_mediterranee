@@ -4,10 +4,13 @@ Cree la base de donnees avec la structure correcte
 """
 import sqlite3
 
-DB_FILE = "hotel_mediterranee.db"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+DB_PATH = os.getenv('DB_PATH', 'hotel_mediterranee.db')
 
 def init_database():
-    conn = sqlite3.connect(DB_FILE)
+conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
     # Creer les tables
