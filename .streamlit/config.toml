@@ -2,10 +2,12 @@
 port = 8501
 headless = true
 enableCORS = false
-enableXsrfProtection = true
+enableXsrfProtection = false
+enableStaticServing = false
+address = "0.0.0.0"
 
 [browser]
-serverAddress = ""
+serverAddress = "local_ip"  # Use 0.0.0.0 equivalent for browser
 gatherUsageStats = false
 
 [theme]

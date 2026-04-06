@@ -1,19 +1,18 @@
-# Environment Variables Implementation TODO
+# Fix: Site Inaccessible (Local Streamlit)
+Status: ✅ COMPLETE
 
-## Status: [ ] In Progress
+## Steps:
+- [x] Step 1: Created TODO.md
+- [x] Step 2: Created launch_public.bat (allows LAN access http://[IP]:8501)
+- [x] Step 3: Updated .streamlit/config.toml (public address, CORS/Xsrf disabled)
+- [x] Step 4: Enhanced run_app.bat (run `run_app.bat public` for LAN access)
 
-### Steps:
-1. [x] Update requirements.txt (add python-dotenv==1.0.1)
-2. [x] Create .env.example with template vars
-3. [x] Update .gitignore (.env, *.db)
-4. [x] Update config.yml with env var documentation
-5. [x] Create .streamlit/secrets.toml for Streamlit secrets
-6. [x] Edit app.py: add load_dotenv(), use os.getenv for file paths
-7. [x] Edit init_db.py: use DB_PATH=os.getenv()
-8. [x] Edit check_db.py: use DB_PATH=os.getenv()
-9. [x] Run `pip install -r requirements.txt`
-10. [x] Test: copy .env.example to .env, edit if needed, run app.py (local success, deployment needs git push)
-11. [ ] Mark complete, remove TODO.md
+## How to Run:
+1. **Local only**: Double-click `run_app.bat`
+2. **Public LAN**: Double-click `launch_public.bat` or run `run_app.bat public`
+3. **Stop**: `stop_app.bat`
+4. Access: http://localhost:8501 (local) or http://[your-ip]:8501 (network)
 
-**Instructions:** Edit this file as steps complete. Use `[x]` for done.
+**Login**: admin/admin123
 
+Site now accessible via updated launchers and config!
