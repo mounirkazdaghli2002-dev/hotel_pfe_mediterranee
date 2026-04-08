@@ -1,0 +1,4 @@
+task_id,agent,rapport,duree_travail_minutes,date_rapport,pieces_utilisees,notes_agent
+1,Agent Maintenance,La plomberie a été réparée avec succès,45,2024-03-01,Joints d'étanchéité,Tout fonctionne correctement maintenant
+2,Agent Maintenance,Climatisation nettoyée et filtrée,30,2024-03-02,Filtre climatisation,Compresseur fonctionne bien
+3,Agent Maintenance,Serrure remplacée,60,2024-03-03,Nouvelle serrure de porte,Métallerie renforcée
