@@ -16,7 +16,6 @@ reportlab>=4.0.0
 requests>=2.28.0
 rich>=13.0.0
 SQLAlchemy>=2.0.0
-sqlalchemy-access>=2.0.0
 tenacity>=9.0.0
 tornado>=6.0.0
 tqdm>=4.60.0

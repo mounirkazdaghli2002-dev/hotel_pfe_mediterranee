@@ -1,0 +1,11 @@
+id,chambre,composant_principal,sous_composant,statut,date_installation,derniere_maintenance
+1,1000,Climatisation,Compresseur,Bon,2023-01-15,2024-03-01
+2,1000,Climatisation,Filtre,Bon,2023-01-15,2024-02-15
+3,1000,Serrure,Mécanisme,Bon,2023-01-15,2024-01-01
+4,1000,Plomberie,Robinetterie,Bon,2023-01-15,2024-02-01
+5,1001,Climatisation,Compresseur,Dégradé,2023-01-15,2024-02-01
+6,1001,Climatisation,Ventilateur,Bon,2023-01-15,2024-03-10
+7,1002,Serrure,Mécanisme,Cassé,2023-01-15,2024-01-01
+8,1002,Plomberie,Tuyaux,Bon,2023-01-15,2024-02-20
+9,1003,Éclairage,Luminaires,Bon,2023-01-15,2024-03-05
+10,1003,Éclairage,Interrupteurs,Bon,2023-01-15,2024-03-05
