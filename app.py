@@ -592,7 +592,7 @@ def get_tabs_for_role():
         tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
         return tab_names, st.tabs(tab_names)
     elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne"]
+        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
         return tab_names, st.tabs(tab_names)
     else:  # Admin
         tab_names = [
@@ -827,6 +827,24 @@ def delete_maintenance_task(task_id, add_notif=True):
 # ============================================
 # GESTION HISTORIQUE MAINTENANCE
 # ============================================
+def update_room_status_with_notification(room_num, new_statut, changed_by):
+    """Met à jour le statut d'une chambre et notifie l'admin"""
+    old_statut = None
+    rooms = load_rooms()
+    room_row = rooms[rooms["numero"] == str(room_num)]
+    if len(room_row) > 0:
+        old_statut = room_row.iloc[0]["statut"]
+    
+    update_room_status(room_num, new_statut)
+    
+    add_notification(
+        "🏨 Statut chambre modifié",
+        f"Chambre {room_num}: {old_statut} → {new_statut} par {changed_by}",
+        "warning",
+        target_role="admin"
+    )
+    return True
+
 def get_maintenance_history(room_num):
     """Retourne l'historique complet des maintenances d'une chambre"""
     tasks = load_maintenance_tasks()
@@ -1061,7 +1079,7 @@ def show_main_app():
     if is_maintenance():
         tab1, tab2 = tabs
     elif is_receptionist():
-        tab_recep1, tab_recep2 = tabs
+        tab_recep1, tab_recep2, tab_recep3 = tabs
     else:
         tab_dash, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
     
@@ -1397,6 +1415,87 @@ def show_main_app():
             
             st.markdown("---")
             st.info("📌 L'administrateur sera notifié immédiatement et créera une tâche de maintenance.")
+    
+    # ========== TAB RÉCEPTIONNISTE: GESTION CHAMBRES ==========
+    if is_receptionist():
+        with tab_recep3:
+            st.subheader("🛏️ Gestion des Chambres")
+            st.markdown("**Changez le statut des chambres pour les check-ins/check-outs:**")
+            
+            rooms = load_rooms()
+            
+            # Filter to show only relevant rooms for receptionist
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                aile_filter = st.selectbox("Aile", ["Tous", "A", "B"], key="recep_aile_f")
+            with col_f2:
+                statut_filter = st.selectbox("Statut actuel", ["Tous", "Libre", "Occupée", "Maintenance"], key="recep_statut_f")
+            
+            filtered = rooms.copy()
+            if aile_filter != "Tous":
+                filtered = filtered[filtered["aile"] == aile_filter]
+            if statut_filter != "Tous":
+                filtered = filtered[filtered["statut"] == statut_filter]
+            
+            st.markdown(f"**{len(filtered)} chambres affichées**")
+            
+            for i, row in filtered.iterrows():
+                status_color = "🟢" if row['statut'] == "Libre" else "🔴" if row['statut'] == "Occupée" else "🟡"
+                
+                with st.expander(f"{status_color} Chambre {row['numero']} - {row['type']} ({row['statut']})"):
+                    col_r1, col_r2 = st.columns(2)
+                    with col_r1:
+                        st.markdown(f"**Type:** {row['type']}")
+                        st.markdown(f"**Étage:** {row['etage']}")
+                        st.markdown(f"**Aile:** {row['aile']}")
+                        st.markdown(f"**Statut actuel:** {row['statut']}")
+                    with col_r2:
+                        st.markdown("**Changer le statut:**")
+                        
+                        col_b1, col_b2 = st.columns(2)
+                        
+                        with col_b1:
+                            if row['statut'] != "Libre":
+                                if st.button(f"✅ Libre", key=f"recep_libre_{row['numero']}"):
+                                    update_room_status_with_notification(
+                                        row["numero"], 
+                                        "Libre",
+                                        st.session_state.get("user_nom", "Réceptionniste")
+                                    )
+                                    st.success(f"Chambre {row['numero']} → Libre")
+                                    st.rerun()
+                            else:
+                                st.info("✅ Déjà Libre")
+                        
+                        with col_b2:
+                            if row['statut'] != "Occupée":
+                                if st.button(f"🔒 Occupée", key=f"recep_occup_{row['numero']}"):
+                                    update_room_status_with_notification(
+                                        row["numero"], 
+                                        "Occupée",
+                                        st.session_state.get("user_nom", "Réceptionniste")
+                                    )
+                                    st.success(f"Chambre {row['numero']} → Occupée")
+                                    st.rerun()
+                            else:
+                                st.info("🔒 Déjà Occupée")
+                        
+                        st.markdown("---")
+                        st.markdown("**⚠️ Maintenance:**")
+                        if row['statut'] != "Maintenance":
+                            if st.button(f"🔧 Maintenance", key=f"recep_maint_{row['numero']}", type="secondary"):
+                                update_room_status_with_notification(
+                                    row["numero"], 
+                                    "Maintenance",
+                                    st.session_state.get("user_nom", "Réceptionniste")
+                                )
+                                st.warning(f"Chambre {row['numero']} → Maintenance")
+                                st.rerun()
+                        else:
+                            st.info("🔧 Déjà en Maintenance")
+            
+            with st.expander("📋 Vue tableau complète"):
+                st.dataframe(filtered, use_container_width=True)
     
     # ========== TAB RÉCLAMATIONS (Admin) ==========
     if is_admin():
