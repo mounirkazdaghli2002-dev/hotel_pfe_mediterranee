@@ -16,19 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application - only essential files
 COPY app.py .
 
-# Copy data and config files - ignore if missing
-COPY config.yml . 2>/dev/null || true
-COPY styles.css . 2>/dev/null || true
-COPY chambres.csv . 2>/dev/null || true
-COPY clients.csv . 2>/dev/null || true
-COPY reclamations.csv . 2>/dev/null || true
-COPY maintenance_tasks.csv . 2>/dev/null || true
-COPY logs_sync.csv . 2>/dev/null || true
-COPY utilisateurs.json . 2>/dev/null || true
-COPY notifications.json . 2>/dev/null || true
-COPY hotel_mediterranee.db . 2>/dev/null || true
-COPY .env . 2>/dev/null || true
-COPY .env.example . 2>/dev/null || true
+# Copy optional config and data files
+COPY config.yml* ./
+COPY styles.css* ./
+COPY *.csv ./
+COPY *.json ./
+COPY .env* ./
 
 # Create data dir
 RUN mkdir -p .streamlit data
