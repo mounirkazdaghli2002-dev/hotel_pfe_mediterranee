@@ -27,6 +27,10 @@ def check_and_restore_session():
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
     
+    # Initialize active tab
+    if "active_tab" not in st.session_state:
+        st.session_state["active_tab"] = 0
+    
     # Check if we have query params with session data
     query_params = st.query_params
     
@@ -567,6 +571,40 @@ def logout():
     st.query_params.clear()
 
 # ============================================
+# NAVIGATION ENTRE LES TABS
+# ============================================
+def navigate_to_tab(tab_index):
+    """Navigate to a specific tab by index"""
+    st.session_state["active_tab"] = tab_index
+    st.rerun()
+
+def get_tabs_for_role():
+    """Return tabs configuration based on user role"""
+    if is_maintenance():
+        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
+        return tab_names, st.tabs(tab_names)
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne"]
+        return tab_names, st.tabs(tab_names)
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        # Set active tab based on session state
+        active_tab = st.session_state.get("active_tab", 0)
+        if 0 <= active_tab < len(tabs):
+            # Streamlit doesn't support setting active tab directly, 
+            # but we can use the tabs as-is and handle navigation in content
+            pass
+        return tab_names, tabs
+
+def navigate_to_section(section_name):
+    """Navigate to a section by setting view_section"""
+    st.session_state["view_section"] = section_name
+
+# ============================================
 # GESTION DES CHAMBRES
 # ============================================
 def load_rooms():
@@ -649,6 +687,9 @@ def load_maintenance_tasks():
             df["duree_reelle_minutes"] = 0.0
         if "type_panne" not in df.columns:
             df["type_panne"] = "Autre"
+        # Force date_completion to string type to prevent dtype errors
+        if "date_completion" in df.columns:
+            df["date_completion"] = df["date_completion"].astype(str)
         return df
     else:
         df = pd.DataFrame(columns=["id", "chambre", "description", "assigned_to", "statut", "date_creation", "date_completion", "created_by", "priorite", "duree_estimee_minutes", "duree_reelle_minutes", "type_panne"])
@@ -711,7 +752,9 @@ def update_task_status(task_id, new_statut):
     tasks.loc[tasks["id"] == task_id, "statut"] = new_statut
     
     if new_statut == "Terminé":
-        tasks.loc[tasks["id"] == task_id, "date_completion"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        # Use .at[] accessor for safer single cell assignment
+        idx = tasks[tasks["id"] == task_id].index[0]
+        tasks.at[idx, "date_completion"] = datetime.now().strftime("%Y-%m-%d %H:%M")
         
         other_active = tasks[(tasks["chambre"] == chambre) & (tasks["statut"] != "Terminé")]
         if len(other_active) == 0:
@@ -1004,69 +1047,318 @@ def show_main_app():
     
     st.title("🏨 Hotel Mediterranee Hammamet")
     
+    # Get tabs based on role
+    tab_names, tabs = get_tabs_for_role()
+    
     if is_maintenance():
-        tab1, tab2 = st.tabs(["🏠 Dashboard", "🔧 Mes Tâches"])
+        tab1, tab2 = tabs
     elif is_receptionist():
-        tab_recep1, tab_recep2 = st.tabs(["🏠 Dashboard", "🔴 Déclarer une Panne"])
+        tab_recep1, tab_recep2 = tabs
     else:
-        tab_dash, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = st.tabs([
-            "🏠 Dashboard", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
-        ])
+        tab_dash, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
     
     # ========== DASHBOARD ==========
     with tab1 if is_maintenance() else (tab_recep1 if is_receptionist() else tab_dash):
-        st.subheader("📊 Tableau de Bord")
+        st.subheader("📊 Tableau de Bord - Vue d'Ensemble")
         
-        col_k1, col_k2, col_k3, col_k4 = st.columns(4)
-        with col_k1:
-            st.metric("Total Chambres", len(rooms))
-        with col_k2:
-            st.metric("Libres", len(rooms[rooms["statut"] == "Libre"]))
-        with col_k3:
-            st.metric("Occupées", len(rooms[rooms["statut"] == "Occupée"]))
-        with col_k4:
-            st.metric("Maintenance", len(rooms[rooms["statut"] == "Maintenance"]))
+        # Load all data for comprehensive dashboard
+        rooms = load_rooms()
+        reclamations = load_reclamations()
+        tasks = load_maintenance_tasks()
+        pannes = load_pannes()
+        composants = load_composants()
+        users = load_users()
+        
+        # Calculate all key metrics
+        # Rooms
+        total_rooms = len(rooms)
+        free_rooms = len(rooms[rooms["statut"] == "Libre"])
+        occupied_rooms = len(rooms[rooms["statut"] == "Occupée"])
+        maintenance_rooms = len(rooms[rooms["statut"] == "Maintenance"])
+        occupancy_rate = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0
+        
+        # Reclamations
+        reclamations_pending = len(reclamations[reclamations["statut"] == "Déclaré"])
+        reclamations_in_progress = len(reclamations[reclamations["statut"] == "En traitement"])
+        
+        # Maintenance Tasks
+        total_tasks = len(tasks)
+        tasks_pending = len(tasks[tasks["statut"] == "En attente"])
+        tasks_in_progress = len(tasks[tasks["statut"] == "En cours"])
+        tasks_completed = len(tasks[tasks["statut"] == "Terminé"])
+        
+        # Pannes types
+        pannes_haute = len(pannes[pannes["priorite"] == "Haute"])
+        pannes_moyenne = len(pannes[pannes["priorite"] == "Moyenne"])
+        pannes_basse = len(pannes[pannes["priorite"] == "Basse"])
+        
+        # Composants
+        total_composants = len(composants)
+        composants_good = len(composants[composants["statut"] == "Bon"])
+        composants_broken = len(composants[composants["statut"] == "Cassé"])
+        composants_degraded = len(composants[composants["statut"] == "Dégradé"])
+        
+        # Users
+        total_users = len(users)
+        admin_users = len([u for u in users.values() if u["role"] == "admin"])
+        maintenance_users = len([u for u in users.values() if u["role"] == "maintenance"])
+        receptionist_users = len([u for u in users.values() if u["role"] == "reception"])
+        
+        # Initialize view section
+        if "view_section" not in st.session_state:
+            st.session_state["view_section"] = None
+        
+        # Main KPIs Section
+        st.markdown("### 🎯 Indicateurs Clés")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("📈 Taux d'Occupation", key="nav_occupancy", help="Cliquez pour voir les détails des chambres"):
+                st.session_state["view_section"] = "rooms"
+            st.metric("📈 Taux d'Occupation", f"{occupancy_rate:.1f}%", f"{occupied_rooms}/{total_rooms} chambres")
+        
+        with col2:
+            if st.button("🛏️ Chambres Disponibles", key="nav_available", help="Cliquez pour gérer les chambres"):
+                st.session_state["view_section"] = "rooms"
+            st.metric("🛏️ Chambres Disponibles", free_rooms, f"sur {total_rooms} total")
+        
+        with col3:
+            total_issues = reclamations_pending + tasks_pending
+            if st.button("⚠️ Problèmes Actifs", key="nav_issues", help="Cliquez pour voir les réclamations et tâches"):
+                st.session_state["view_section"] = "issues"
+            st.metric("⚠️ Problèmes Actifs", total_issues, f"{reclamations_pending} pannes + {tasks_pending} tâches")
         
         st.markdown("---")
         
-        if is_receptionist():
-            reclamations = load_reclamations()
-            open_reclamations = len(reclamations[reclamations["statut"] == "Déclaré"])
-            st.metric("Pannes signalées (en attente)", open_reclamations, delta="")
+        # Detailed Sections
+        st.markdown("### 📊 Sections Détaillées")
+        
+        # Row 1: Rooms & Reclamations
+        col_a1, col_a2 = st.columns(2)
+        
+        with col_a1:
+            st.markdown("#### 🛏️ **Chambres**")
+            room_cols = st.columns(2)
+            with room_cols[0]:
+                if st.button("🏨 Total Chambres", key="nav_total_rooms"):
+                    st.session_state["view_section"] = "rooms"
+                st.metric("🏨 Total", total_rooms)
+                
+                if st.button("🔧 En Maintenance", key="nav_maint_rooms"):
+                    st.session_state["view_section"] = "rooms"
+                st.metric("🔧 Maintenance", maintenance_rooms)
+            
+            with room_cols[1]:
+                if st.button("✅ Libres", key="nav_free_rooms"):
+                    st.session_state["view_section"] = "rooms"
+                st.metric("✅ Libres", free_rooms)
+                
+                if st.button("🔒 Occupées", key="nav_occupied_rooms"):
+                    st.session_state["view_section"] = "rooms"
+                st.metric("🔒 Occupées", occupied_rooms)
+        
+        with col_a2:
+            st.markdown("#### 🔴 **Réclamations**")
+            rec_cols = st.columns(2)
+            with rec_cols[0]:
+                if st.button("⏳ En Attente", key="nav_rec_pending"):
+                    navigate_to_section("reclamations")
+                st.metric("⏳ En Attente", reclamations_pending)
+            
+            with rec_cols[1]:
+                if st.button("🔄 En Traitement", key="nav_rec_progress"):
+                    navigate_to_section("reclamations")
+                st.metric("🔄 En Traitement", reclamations_in_progress)
         
         st.markdown("---")
         
-        st.subheader("🛏️ État des Chambres")
+        # Row 2: Maintenance & Pannes
+        col_b1, col_b2 = st.columns(2)
         
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            aile_filter = st.selectbox("Aile", ["Tous", "A", "B"])
-        with col_f2:
-            statut_filter = st.selectbox("Statut", ["Tous", "Libre", "Occupée", "Maintenance"])
-        with col_f3:
-            etage_filter = st.selectbox("Étage", ["Tous", 0, 1, 2, 3])
+        with col_b1:
+            st.markdown("#### 🔧 **Maintenance**")
+            maint_cols = st.columns(3)
+            with maint_cols[0]:
+                if st.button("📋 Total Tâches", key="nav_total_tasks"):
+                    navigate_to_section("maintenance")
+                st.metric("📋 Total", total_tasks)
+            
+            with maint_cols[1]:
+                if st.button("⏳ En Attente", key="nav_tasks_pending"):
+                    navigate_to_section("maintenance")
+                st.metric("⏳ En Attente", tasks_pending)
+            
+            with maint_cols[2]:
+                if st.button("🔄 En Cours", key="nav_tasks_progress"):
+                    navigate_to_section("maintenance")
+                st.metric("🔄 En Cours", tasks_in_progress)
         
-        filtered = rooms.copy()
-        if aile_filter != "Tous":
-            filtered = filtered[filtered["aile"] == aile_filter]
-        if statut_filter != "Tous":
-            filtered = filtered[filtered["statut"] == statut_filter]
-        if etage_filter != "Tous":
-            filtered = filtered[filtered["etage"] == etage_filter]
+        with col_b2:
+            st.markdown("#### ⚙️ **Types de Pannes**")
+            panne_cols = st.columns(3)
+            with panne_cols[0]:
+                if st.button("🔴 Haute", key="nav_pannes_high"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 4
+                        st.rerun()
+                st.metric("🔴 Haute", pannes_haute)
+            
+            with panne_cols[1]:
+                if st.button("🟡 Moyenne", key="nav_pannes_medium"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 4
+                        st.rerun()
+                st.metric("🟡 Moyenne", pannes_moyenne)
+            
+            with panne_cols[2]:
+                if st.button("🟢 Basse", key="nav_pannes_low"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 4
+                        st.rerun()
+                st.metric("🟢 Basse", pannes_basse)
         
-        st.markdown(f"**{len(filtered)}/{len(rooms)} chambres**")
+        st.markdown("---")
         
-        cols = st.columns(5)
-        for i, row in filtered.head(20).iterrows():
-            with cols[i % 5]:
-                emoji = "✅" if row["statut"] == "Libre" else "🔒" if row["statut"] == "Occupée" else "🔧"
-                st.markdown(f"""
-                <div class="room-card {row['statut'].lower()}">
-                    <b>🚪 {row['numero']}</b><br>
-                    <span class="status-badge {row['statut'].lower()}">{emoji} {row['statut']}</span><br>
-                    <small>{row['type']}</small>
-                </div>
-                """, unsafe_allow_html=True)
+        # Row 3: Composants & Utilisateurs
+        col_c1, col_c2 = st.columns(2)
+        
+        with col_c1:
+            st.markdown("#### 🔩 **Composants**")
+            comp_cols = st.columns(2)
+            with comp_cols[0]:
+                if st.button("📦 Total Composants", key="nav_total_comp"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 5
+                        st.rerun()
+                st.metric("📦 Total", total_composants)
+                
+                if st.button("✅ Disponibles", key="nav_comp_good"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 5
+                        st.rerun()
+                pct_good = (composants_good/total_composants*100) if total_composants > 0 else 0
+                st.metric("✅ Disponibles", f"{composants_good}/{total_composants}", f"{pct_good:.1f}%")
+            
+            with comp_cols[1]:
+                if st.button("❌ En Panne", key="nav_comp_broken"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 5
+                        st.rerun()
+                st.metric("❌ En Panne", composants_broken)
+                
+                if st.button("⚠️ À Réviser", key="nav_comp_degraded"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 5
+                        st.rerun()
+                st.metric("⚠️ À Réviser", composants_degraded)
+        
+        with col_c2:
+            st.markdown("#### 👥 **Utilisateurs**")
+            user_cols = st.columns(2)
+            with user_cols[0]:
+                if st.button("👤 Total Utilisateurs", key="nav_total_users"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 7
+                        st.rerun()
+                st.metric("👤 Total", total_users)
+                
+                if st.button("👑 Administrateurs", key="nav_admin_users"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 7
+                        st.rerun()
+                st.metric("👑 Admins", admin_users)
+            
+            with user_cols[1]:
+                if st.button("🔧 Agents Maintenance", key="nav_maint_users"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 6
+                        st.rerun()
+                st.metric("🔧 Agents", maintenance_users)
+                
+                if st.button("🏨 Réceptionnistes", key="nav_recep_users"):
+                    if is_admin():
+                        st.session_state["active_tab"] = 7
+                        st.rerun()
+                st.metric("🏨 Réception", receptionist_users)
+        
+        # Section détaillée basée sur la navigation
+        if st.session_state["view_section"]:
+            st.markdown("---")
+            st.markdown(f"### 📋 Détails - {st.session_state['view_section'].title()}")
+            
+            if st.session_state["view_section"] == "rooms":
+                st.markdown("**🛏️ Gestion des Chambres**")
+                # Afficher un résumé des chambres
+                room_status = rooms["statut"].value_counts()
+                st.dataframe(room_status.to_frame(), use_container_width=True)
+                
+                # Boutons pour aller à la section complète
+                col_nav1, col_nav2 = st.columns(2)
+                with col_nav1:
+                    if st.button("🔍 Voir toutes les chambres", key="go_to_rooms"):
+                        st.session_state["active_tab"] = 2
+                        st.session_state["view_section"] = None
+                        st.rerun()
+                with col_nav2:
+                    if st.button("❌ Fermer les détails", key="close_details"):
+                        st.session_state["view_section"] = None
+                        st.rerun()
+                        
+            elif st.session_state["view_section"] == "reclamations":
+                st.markdown("**🔴 Réclamations de Pannes**")
+                
+                # Afficher les réclamations récentes
+                if len(reclamations) > 0:
+                    recent_recs = reclamations.sort_values("date_declaration", ascending=False).head(10)
+                    for _, rec in recent_recs.iterrows():
+                        status_icon = "🔴" if rec["statut"] == "Déclaré" else "🟡" if rec["statut"] == "En traitement" else "🟢"
+                        with st.expander(f"{status_icon} Chambre {rec['chambre']} - {rec['type_panne']}"):
+                            st.markdown(f"**Description:** {rec['description']}")
+                            st.markdown(f"**Signalée par:** {rec['creé_par']}")
+                            st.markdown(f"**Date:** {rec['date_declaration']}")
+                            st.markdown(f"**Statut:** {rec['statut']}")
+                else:
+                    st.info("Aucune réclamation")
+                
+                # Bouton pour aller à la section complète
+                col_nav1, col_nav2 = st.columns(2)
+                with col_nav1:
+                    if st.button("🔍 Voir toutes les réclamations", key="go_to_reclamations_full"):
+                        st.session_state["active_tab"] = 1
+                        st.session_state["view_section"] = None
+                        st.rerun()
+                with col_nav2:
+                    if st.button("❌ Fermer", key="close_reclamations"):
+                        st.session_state["view_section"] = None
+                        
+            elif st.session_state["view_section"] == "maintenance":
+                st.markdown("**🔧 Tâches de Maintenance**")
+                
+                # Afficher les tâches récentes
+                if len(tasks) > 0:
+                    recent_tasks = tasks.sort_values("date_creation", ascending=False).head(10)
+                    for _, task in recent_tasks.iterrows():
+                        status_icon = "🟡" if task["statut"] == "En attente" else "🔵" if task["statut"] == "En cours" else "🟢"
+                        with st.expander(f"{status_icon} #{task['id']} - Chambre {task['chambre']}"):
+                            st.markdown(f"**Description:** {task['description']}")
+                            st.markdown(f"**Type:** {task.get('type_panne', 'Maintenance')}")
+                            st.markdown(f"**Assigné à:** {task['assigned_to']}")
+                            st.markdown(f"**Statut:** {task['statut']}")
+                            if task['date_completion']:
+                                st.markdown(f"**Terminée:** {task['date_completion']}")
+                else:
+                    st.info("Aucune tâche")
+                
+                # Bouton pour aller à la section complète
+                col_nav1, col_nav2 = st.columns(2)
+                with col_nav1:
+                    if st.button("🔍 Voir toutes les tâches", key="go_to_maintenance_full"):
+                        st.session_state["active_tab"] = 3
+                        st.session_state["view_section"] = None
+                        st.rerun()
+                with col_nav2:
+                    if st.button("❌ Fermer", key="close_maintenance"):
+                        st.session_state["view_section"] = None
     
     # ========== TAB RÉCEPTIONNISTE: DÉCLARER UNE PANNE ==========
     if is_receptionist():
@@ -1642,52 +1934,92 @@ def show_main_app():
                     st.markdown("**Utilisez l'onglet 'Ajouter' pour en créer un**")
             
             with tab_comp3:
-                st.markdown("### 📊 Tous les Composants de l'Hôtel")
+                st.markdown("### 📊 Stock Complet & Édition Admin")
                 
                 if len(composants) > 0:
-                    # Filtres
+                    col_search, col_export = st.columns([3,1])
+                    with col_search:
+                        search_term = st.text_input("🔍 Rechercher (chambre/composant)")
+                    with col_export:
+                        csv = composants.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            "📥 Exporter CSV", 
+                            csv, 
+                            "composants_chambres.csv", 
+                            "text/csv"
+                        )
+                    
+                    # Filtres avancés
                     col_f1, col_f2, col_f3 = st.columns(3)
                     with col_f1:
-                        filter_room = st.selectbox("Filtrer par chambre", ["Tous"] + sorted(composants["chambre"].unique().tolist()), key="comp_room_filter")
+                        filter_room = st.selectbox("Chambre", ["Toutes"] + sorted(composants["chambre"].unique().tolist()), key="comp_room_filter")
                     with col_f2:
-                        filter_principal = st.selectbox("Filtrer par composant", ["Tous"] + sorted(composants["composant_principal"].unique().tolist()), key="comp_principal_filter")
+                        filter_principal = st.selectbox("Principal", ["Tous"] + sorted(composants["composant_principal"].unique().tolist()), key="comp_principal_filter")
                     with col_f3:
-                        filter_status = st.selectbox("Filtrer par statut", ["Tous"] + sorted(composants["statut"].unique().tolist()), key="comp_status_filter")
+                        filter_status = st.selectbox("Statut", ["Tous"] + sorted(composants["statut"].unique().tolist()), key="comp_status_filter")
                     
-                    # Appliquer les filtres
+                    # Filtrage
                     filtered_comp = composants.copy()
-                    if filter_room != "Tous":
+                    if search_term:
+                        mask = filtered_comp["chambre"].astype(str).str.contains(search_term, case=False) | \
+                               filtered_comp["composant_principal"].str.contains(search_term, case=False) | \
+                               filtered_comp["sous_composant"].str.contains(search_term, case=False)
+                        filtered_comp = filtered_comp[mask]
+                    if filter_room != "Toutes":
                         filtered_comp = filtered_comp[filtered_comp["chambre"] == filter_room]
                     if filter_principal != "Tous":
                         filtered_comp = filtered_comp[filtered_comp["composant_principal"] == filter_principal]
                     if filter_status != "Tous":
                         filtered_comp = filtered_comp[filtered_comp["statut"] == filter_status]
                     
-                    st.markdown(f"**Affichage: {len(filtered_comp)} composant(s) / {len(composants)} total**")
+                    st.markdown(f"**Résultats: {len(filtered_comp)} / {len(composants)} composants**")
                     
-                    # Tableau
-                    display_cols = ["chambre", "composant_principal", "sous_composant", "statut", "date_installation", "derniere_maintenance"]
-                    st.dataframe(filtered_comp[display_cols], use_container_width=True)
+                    # Éditeur admin (modifiable)
+                    edited_composants = st.data_editor(
+                        filtered_comp,
+                        num_rows="dynamic",
+                        use_container_width=True,
+                        hide_index=False,
+                        column_config={
+                            "statut": st.column_config.SelectboxColumn(
+                                "Statut",
+                                options=["Bon", "Dégradé", "Cassé", "En maintenance"],
+                                required=True
+                            ),
+                            "composant_principal": st.column_config.TextColumn("Principal", required=True),
+                            "sous_composant": st.column_config.TextColumn("Sous-composant", required=True),
+                            "chambre": st.column_config.TextColumn("Chambre", required=True)
+                        }
+                    )
                     
-                    # Statistiques
+                    if st.button("💾 Sauvegarder les modifications", use_container_width=True, type="primary"):
+                        save_composants(edited_composants)
+                        st.success("✅ Stock mis à jour!")
+                        st.rerun()
+                    
+                    # Stock summary
                     st.markdown("---")
-                    st.markdown("### 📈 Statistiques")
+                    st.markdown("### 📈 Résumé Stock")
+                    stock_summary = composants.groupby("composant_principal")["statut"].value_counts().unstack(fill_value=0)
+                    st.dataframe(stock_summary, use_container_width=True)
                     
-                    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-                    with col_s1:
-                        bon_count = len(composants[composants["statut"] == "Bon"])
-                        st.metric("✅ En bon état", bon_count)
-                    with col_s2:
-                        degrade_count = len(composants[composants["statut"] == "Dégradé"])
-                        st.metric("⚠️ Dégradés", degrade_count)
-                    with col_s3:
-                        casse_count = len(composants[composants["statut"] == "Cassé"])
-                        st.metric("❌ Cassés", casse_count)
-                    with col_s4:
-                        maint_count = len(composants[composants["statut"] == "En maintenance"])
-                        st.metric("🔧 En maintenance", maint_count)
+                    # Metrics
+                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                    with col_m1:
+                        total = len(composants)
+                        st.metric("Total Composants", total)
+                    with col_m2:
+                        bon = len(composants[composants["statut"] == "Bon"])
+                        pct_bon = (bon/total*100) if total > 0 else 0
+                        st.metric("✅ Disponibles", f"{bon}/{total}", f"{pct_bon:.1f}%")
+                    with col_m3:
+                        casse = len(composants[composants["statut"] == "Cassé"])
+                        st.metric("❌ En panne", casse)
+                    with col_m4:
+                        degrade = len(composants[composants["statut"] == "Dégradé"])
+                        st.metric("⚠️ À réviser", degrade)
                 else:
-                    st.info("📭 Aucun composant enregistré pour le moment")
+                    st.warning("📭 Aucun composant. Ajoutez-en via l'onglet 'Ajouter'!")
     
     # ========== TAB HISTORIQUE AGENTS ==========
     if is_admin():
