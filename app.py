@@ -373,9 +373,17 @@ def add_panne(nom_panne, description, priorite):
 def load_composants():
     """Charge les composants des chambres"""
     if os.path.exists(COMPOSANTS_FILE):
-        return pd.read_csv(COMPOSANTS_FILE)
+        df = pd.read_csv(COMPOSANTS_FILE)
+        # Force proper types to prevent Streamlit data_editor compatibility errors
+        if "id" in df.columns:
+            df["id"] = df["id"].astype("Int64")  # nullable integer
+        for col in ["chambre", "composant_principal", "sous_composant", "statut", "date_installation", "derniere_maintenance"]:
+            if col in df.columns:
+                df[col] = df[col].astype(str)
+        return df
     else:
         df = pd.DataFrame(columns=["id", "chambre", "composant_principal", "sous_composant", "statut", "date_installation", "derniere_maintenance"])
+        df = df.astype({"id": "Int64", "chambre": str, "composant_principal": str, "sous_composant": str, "statut": str, "date_installation": str, "derniere_maintenance": str})
         df.to_csv(COMPOSANTS_FILE, index=False)
         return df
 
@@ -2235,6 +2243,7 @@ def show_main_app():
                 st.dataframe(filtered_rooms, use_container_width=True)
                 
                 st.markdown(f"**Total:** {len(filtered_rooms)} chambres")
+
 
 # ============================================
 # MAIN
