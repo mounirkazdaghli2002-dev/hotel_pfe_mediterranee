@@ -739,41 +739,9 @@ def logout():
     else:  # Admin
         tab_names = [
 =======
-    elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
-    else:  # Admin
-        tab_names = [
-            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
-            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
-        ]
-        tabs = st.tabs(tab_names)
-        # Set active tab based on session state
-        active_tab = st.session_state.get("active_tab", 0)
-        if 0 <= active_tab < len(tabs):
-            # Streamlit doesn't support setting active tab directly, 
-            # but we can use the tabs as-is and handle navigation in content
-            pass
-        return tab_names, tabs
+def get_tabs_for_role():\n    if is_maintenance():\n        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    else:  # Admin\n        tab_names = [\n            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", \n            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"\n        ]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
 =======
-def get_tabs_for_role():
-    if is_maintenance():
-        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
-
-    elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
-    else:  # Admin
-        tab_names = [
-            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
-            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
-        ]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
+def get_tabs_for_role():\n    if is_maintenance():\n        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    else:  # Admin\n        tab_names = [\n            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", \n            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"\n        ]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
 
 def navigate_to_tab(tab_index):
     """Navigate to a specific tab by index"""
