@@ -232,6 +232,7 @@ PANNES_FILE = os.path.join(DATA_DIR, 'pannes.csv')
 COMPOSANTS_FILE = os.path.join(DATA_DIR, 'composants_chambres.csv')
 RAPPORTS_FILE = os.path.join(DATA_DIR, 'rapports_taches.csv')
 RECLAMATIONS_FILE = os.path.join(DATA_DIR, 'reclamations.csv')
+RESERVATIONS_FILE = os.path.join(DATA_DIR, 'reservations.csv')
 
 def play_notification_sound():
     """Joue un son de notification (JavaScript universel)"""
@@ -523,6 +524,156 @@ def delete_reclamation(reclamation_id):
     return reclamations
 
 # ============================================
+# GESTION DES RÉSERVATIONS (Réceptionniste/Admin)
+# ============================================
+def load_reservations():
+    """Charge les réservations"""
+    if os.path.exists(RESERVATIONS_FILE):
+        df = pd.read_csv(RESERVATIONS_FILE)
+        # Convert date columns to datetime for easier filtering
+        for col in ['date_arrivee', 'date_depart']:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+        # Ensure id is numeric
+        if 'id' in df.columns:
+            df['id'] = pd.to_numeric(df['id'], errors='coerce').astype('Int64')
+        return df
+    else:
+        # Create empty DataFrame with schema
+        df = pd.DataFrame(columns=[
+            'id', 'nom_client', 'numero_chambre', 'date_arrivee', 'date_depart', 
+            'nbre_nuits', 'telephone', 'email', 'statut', 'prix_nuit', 'total_prix', 
+            'checkin_time', 'checkout_time', 'notes'
+        ])
+        df.to_csv(RESERVATIONS_FILE, index=False)
+        return df
+
+def save_reservations(reservations):
+    """Sauvegarde les réservations"""
+    reservations.to_csv(RESERVATIONS_FILE, index=False)
+
+def create_reservation(nom_client, numero_chambre, date_arrivee, date_depart, telephone="", email="", statut="Confirmée", notes=""):
+    """Crée une nouvelle réservation après vérification de disponibilité"""
+    reservations = load_reservations()
+    rooms = load_rooms()
+    
+    # Check availability
+    if not check_availability(numero_chambre, date_arrivee, date_depart):
+        return False, "Chambre non disponible pour ces dates."
+    
+    # Get room price
+    room_row = rooms[rooms['numero'] == str(numero_chambre)]
+    if len(room_row) == 0:
+        return False, "Chambre inexistante."
+    
+    prix_nuit = 120.0  # Default, can add price to chambres.csv later
+    nbre_nuits = (date_depart - date_arrivee).days
+    total_prix = prix_nuit * nbre_nuits
+    
+    new_id = reservations['id'].max() + 1 if len(reservations) > 0 else 1
+    
+    new_res = pd.DataFrame([{
+        'id': new_id,
+        'nom_client': nom_client,
+        'numero_chambre': str(numero_chambre),
+        'date_arrivee': date_arrivee,
+        'date_depart': date_depart,
+        'nbre_nuits': nbre_nuits,
+        'telephone': telephone,
+        'email': email,
+        'statut': statut,
+        'prix_nuit': prix_nuit,
+        'total_prix': total_prix,
+        'checkin_time': '14:00',
+        'checkout_time': '12:00',
+        'notes': notes
+    }])
+    
+    reservations = pd.concat([reservations, new_res], ignore_index=True)
+    save_reservations(reservations)
+    
+    # Notification
+    add_notification(
+        "📅 Nouvelle réservation",
+        f"{nom_client} - Chambre {numero_chambre} ({date_arrivee.date()} → {date_depart.date()})",
+        "success",
+        target_role="receptionniste"
+    )
+    
+    return True, f"Réservation #{new_id} créée avec succès (Total: {total_prix} DT)"
+
+def update_reservation(res_id, **kwargs):
+    """Met à jour une réservation existante"""
+    reservations = load_reservations()
+    if res_id not in reservations['id'].values:
+        return False, "Réservation inexistante."
+    
+    for key, value in kwargs.items():
+        reservations.loc[reservations['id'] == res_id, key] = value
+    
+    save_reservations(reservations)
+    return True, "Réservation mise à jour."
+
+def delete_reservation(res_id):
+    """Annule/supprime une réservation"""
+    reservations = load_reservations()
+    if res_id not in reservations['id'].values:
+        return False, "Réservation inexistante."
+    
+    res_row = reservations[reservations['id'] == res_id].iloc[0]
+    reservations = reservations[reservations['id'] != res_id]
+    save_reservations(reservations)
+    
+    add_notification(
+        "📅 Réservation annulée",
+        f"#{res_id} - {res_row['nom_client']} - Chambre {res_row['numero_chambre']}",
+        "warning"
+    )
+    
+    return True, "Réservation annulée."
+
+def check_availability(numero_chambre, date_debut, date_fin):
+    """Vérifie si une chambre est disponible pour une période donnée"""
+    reservations = load_reservations()
+    rooms = load_rooms()
+    
+    # Check if room exists and is not in maintenance
+    room_row = rooms[rooms['numero'] == str(numero_chambre)]
+    if len(room_row) == 0 or room_row.iloc[0]['statut'] == 'Maintenance':
+        return False
+    
+    # Check overlapping reservations
+    conflicting = reservations[
+        (reservations['numero_chambre'] == str(numero_chambre)) &
+        (reservations['statut'] != 'Annulée') &
+        (
+            (reservations['date_arrivee'] <= date_fin) &
+            (reservations['date_depart'] >= date_debut)
+        )
+    ]
+    
+    return len(conflicting) == 0
+
+def get_upcoming_checkins(today=datetime.now()):
+    """Récupère les check-ins du jour"""
+    reservations = load_reservations()
+    today_str = today.date()
+    checkins = reservations[
+        (reservations['date_arrivee'].dt.date == today_str) &
+        (reservations['statut'] == 'Confirmée')
+    ]
+    return len(checkins)
+
+def get_reservations_stats():
+    """Statistiques rapides des réservations"""
+    reservations = load_reservations()
+    total = len(reservations)
+    confirmed = len(reservations[reservations['statut'] == 'Confirmée'])
+    pending = len(reservations[reservations['statut'] == 'En attente'])
+    occupancy = (confirmed / total * 100) if total > 0 else 0
+    return total, confirmed, pending, occupancy
+
+# ============================================
 # GESTION DES UTILISATEURS
 # ============================================
 def load_users():
@@ -592,8 +743,18 @@ def get_tabs_for_role():
         tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
         return tab_names, st.tabs(tab_names)
     elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres", "📅 Réservations"]
-        return tab_names, st.tabs(tab_names)
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+>>>>>>> main
+=======
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+=======
+    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
+>>>>>>> main
     else:  # Admin
         tab_names = [
             "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
@@ -1083,9 +1244,8 @@ def show_main_app():
     if is_maintenance():
         tab1, tab2 = tabs
     elif is_receptionist():
-        tab_recep1, tab_recep2, tab_recep3 = tabs
-    else:
-        tab_dash, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
+        tab_recep1, tab_reservations, tab_recep2, tab_recep3 = tabs
+    else:\n        tab_dash, tab_reserv_admin, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
     
     # ========== DASHBOARD ==========
     with tab1 if is_maintenance() else (tab_recep1 if is_receptionist() else tab_dash):
