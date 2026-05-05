@@ -695,6 +695,10 @@ def load_maintenance_tasks():
             df["duree_reelle_minutes"] = 0.0
         if "type_panne" not in df.columns:
             df["type_panne"] = "Autre"
+# Ensure all columns exist with defaults
+        for col, default in {"priorite": "Moyenne", "duree_estimee_minutes": 0.0, "duree_reelle_minutes": 0.0, "type_panne": "Autre"}.items():
+            if col not in df.columns:
+                df[col] = default
         # Force date_completion to string type to prevent dtype errors
         if "date_completion" in df.columns:
             df["date_completion"] = df["date_completion"].astype(str)
@@ -1829,13 +1833,16 @@ def show_main_app():
             if filter_priorite != "Tous":
                 filtered_tasks = filtered_tasks[filtered_tasks["priorite"] == filter_priorite]
             
-            # Trier par priorité (Haute > Moyenne > Basse)
+# Safe priority sort with fallback
             priority_order = {"Haute": 0, "Moyenne": 1, "Basse": 2}
-            # Ensure priorite column exists and has valid values
+            filtered_tasks = filtered_tasks.sort_values(["date_creation"], ascending=[False])  # Default sort
             if "priorite" in filtered_tasks.columns and len(filtered_tasks) > 0:
                 filtered_tasks["priorite"] = filtered_tasks["priorite"].fillna("Moyenne")
-                filtered_tasks["priority_sort"] = filtered_tasks["priorite"].map(priority_order).fillna(1)
-                filtered_tasks = filtered_tasks.sort_values(["priority_sort", "date_creation"], ascending=[True, False]).drop("priority_sort", axis=1)
+                try:
+                    filtered_tasks["priority_sort"] = filtered_tasks["priorite"].map(priority_order).fillna(1)
+                    filtered_tasks = filtered_tasks.sort_values(["priority_sort", "date_creation"], ascending=[True, False]).drop("priority_sort", axis=1)
+                except:
+                    pass  # Keep default sort
             
             if len(filtered_tasks) > 0:
                 for idx, task in filtered_tasks.iterrows():
