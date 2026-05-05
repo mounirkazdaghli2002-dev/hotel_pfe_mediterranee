@@ -82,22 +82,7 @@ def authenticate(username, password):
 def is_admin():
     return st.session_state.get("user_role") == "admin"
 
-def is_receptionniste():
-    return st.session_state.get("user_role") == "receptionniste"
-
-def is_maintenance():
-    return st.session_state.get("user_role") == "maintenance"
-
-# ============================================
-# ROOMS MANAGEMENT
-# ============================================
-def load_rooms():
-    df = load_df(ROOMS_FILE, {'numero': '', 'type': '', 'aile': '', 'statut': 'Libre', 'etage': 1})
-    if df.empty:
-        data = [{'numero': str(i), 'type': 'Standard', 'aile': 'A', 'statut': 'Libre', 'etage': 1} for i in range(101, 175)]
-        df = pd.DataFrame(data)
-        save_df(df, ROOMS_FILE)
-    return df
+def is_receptionniste():\n    return st.session_state.get("user_role") == "receptionniste"\n\ndef is_maintenance():\n    return st.session_state.get("user_role") == "maintenance"\n\n# ============================================\n# ROOMS MANAGEMENT (KEEP FIRST DEFINITION)\n# ============================================\ndef load_rooms():\n    df = load_df(ROOMS_FILE, {'numero': '', 'type': '', 'aile': '', 'statut': 'Libre', 'etage': 1})\n    if df.empty:\n        data = [{'numero': str(i), 'type': 'Standard', 'aile': 'A', 'statut': 'Libre', 'etage': 1} for i in range(101, 175)]\n        df = pd.DataFrame(data)\n        save_df(df, ROOMS_FILE)\n    return df
 
 def update_room_status(room_num, new_statut):
     rooms = load_rooms()
@@ -339,19 +324,7 @@ if (document.readyState === 'complete') {
 </style>
 """, unsafe_allow_html=True)
 
-# ============================================
-# GESTION DES FICHIERS (CONFIGURABLE VIA .env)
-# ============================================
-DATA_DIR = os.getenv('DATA_DIR', '.')
-USERS_FILE = os.path.join(DATA_DIR, 'utilisateurs.json')
-ROOMS_FILE = os.path.join(DATA_DIR, 'chambres.csv')
-MAINTENANCE_FILE = os.path.join(DATA_DIR, 'maintenance_tasks.csv')
-NOTIFICATIONS_FILE = os.path.join(DATA_DIR, 'notifications.json')
-PANNES_FILE = os.path.join(DATA_DIR, 'pannes.csv')
-COMPOSANTS_FILE = os.path.join(DATA_DIR, 'composants_chambres.csv')
-RAPPORTS_FILE = os.path.join(DATA_DIR, 'rapports_taches.csv')
-RECLAMATIONS_FILE = os.path.join(DATA_DIR, 'reclamations.csv')
-RESERVATIONS_FILE = os.path.join(DATA_DIR, 'reservations.csv')
+# ============================================\n# FILES ALREADY DEFINED ABOVE - SKIPPED DUPLICATE\n# ============================================
 
 def play_notification_sound():
     """Joue un son de notification (JavaScript universel)"""
@@ -1161,44 +1134,7 @@ def is_problem_room(room_num):
     """Vérifie si une chambre a eu 3 maintenances ou plus (classée comme problème)"""
     return get_maintenance_count(room_num) >= 3
 
-# ============================================
-# CONFIGURATION PAGE
-# ============================================
-st.set_page_config(page_title="Hotel Mediterranee", page_icon="🏨", layout="wide")
 
-COLORS = {
-    "background": "#0f172a",
-    "card_bg": "#1e293b",
-    "sidebar_bg": "#022E51",
-    "text_white": "#ffffff",
-    "text_light": "#cbd5e1",
-    "secondary": "#CC6D3D",
-    "success": "#10b981",
-    "warning": "#f59e0b",
-    "danger": "#ef4444",
-    "info": "#3b82f6"
-}
-
-st.markdown(f"""
-<style>
-.stApp {{background: linear-gradient(135deg, {COLORS['background']} 0%, #1e293b 100%);}}
-h1, h2, h3, h4, p, div, label {{color: {COLORS['text_white']} !important;}}
-.room-card {{background: {COLORS['card_bg']}; border-radius: 16px; padding: 20px; text-align: center;}}
-.room-card:hover {{transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);}}
-.room-card.free {{border-left: 5px solid {COLORS['success']};}}
-.room-card.occupied {{border-left: 5px solid {COLORS['info']};}}
-.room-card.maintenance {{border-left: 5px solid {COLORS['danger']};}}
-section[data-testid="stSidebar"] {{background: {COLORS['sidebar_bg']};}}
-section[data-testid="stSidebar"] * {{color: {COLORS['text_white']} !important;}}
-.stTextInput > div > div {{background: {COLORS['card_bg']} !important; color: white !important;}}
-.stSelectbox > div > div {{background: {COLORS['card_bg']} !important; color: white !important;}}
-.stButton > button {{background: {COLORS['secondary']}; color: white; border-radius: 10px;}}
-.status-badge {{padding: 6px 14px; border-radius: 20px; font-weight: 600;}}
-.status-badge.free {{background: {COLORS['success']};}}
-.status-badge.occupied {{background: {COLORS['info']};}}
-.status-badge.maintenance {{background: {COLORS['danger']};}}
-</style>
-""", unsafe_allow_html=True)
 
 # ============================================
 # PAGE DE LOGIN
