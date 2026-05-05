@@ -1,27 +1,28 @@
-# TODO: Adding Reservations Management Section - COMPLETE ✅
+# Hotel Mediterranee - Fix Progress ✅
 
-## Plan Steps (All Completed):
-1. [x] Create reservations.csv with sample data.
-2. [x] Add data functions to app.py (load/save/create/update/delete/check_availability).
-3. [x] Update get_tabs_for_role() for receptionniste/admin tabs.
-4. [x] Implement "📅 Réservations" tab UI: metrics, filters, list, create/edit form.
-5. [x] Integrate with room status and notifications.
-6. [x] Add dashboard metrics (total res, occupancy %).
-7. [x] Test as receptionniste/admin.
-8. [x] Git commit & push.
+## Approved Plan Status
+1. ✅ **TODO.md** created/updated
+2. ✅ **Edit app.py** - 
+   - Remove duplicate `get_tabs_for_role()` ✓
+   - Fix tab unpacking → dynamic `tabs[i]` ✓
+   - Integrate `reservations_tab()` ✓
+   | Tab | Content |
+   |-----|---------|
+   | 0 | Dashboard stub |
+   | 1 | Reservations ✓ |
+   | others | Stub |
+3. ⏳ **Test** - https://mediteranee.streamlit.app/
 
-**Progress**: Reservations management COMPLETE. Git changes pushed successfully.
+3. ⏳ **Test changes** - Deployed app: https://mediteranee.streamlit.app/
+4. ⏳ **Verify**:
+   | Role | Expected |
+   |------|----------|
+   | Admin | 9 tabs, Reservations (tab1) works |
+   | Receptionniste | 4 tabs, Reservations (tab1) CRUD |
+5. ⏳ **attempt_completion**
 
-**Test Instructions:**
-```
-Login: receptionniste / reception123    OR   admin / admin123
-streamlit run app.py
-```
+## Next
+- Edit app.py now
+- User tests deployed app
+- Mark complete
 
-**Features:**
-- Full CRUD + availability check
-- Reception/Admin tabs with metrics
-- Filterable list, create form
-- Live dashboard stats
-
-Ready for production! 🎉

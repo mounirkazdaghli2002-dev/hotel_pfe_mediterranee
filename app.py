@@ -1,16 +1,21 @@
-import streamlit as st
-import pandas as pd
-import os
-import json
-from datetime import datetime
-import hashlib
-import base64
-from dotenv import load_dotenv
-import os
-load_dotenv()
+from reservations_tab import reservations_tab
 
-# ============================================
-# CONFIGURATION PAGE
+def render_tab_content(i, role):
+    """Route content to correct tab by index"""
+    rooms = load_rooms()
+    if i == 0:
+        st.subheader("📊 Dashboard")
+        st.info("Dashboard - Full metrics here")
+    elif i == 1:
+        reservations_tab(role, rooms)
+    elif i == 2 and role == "admin":
+        st.subheader("🔴 Réclamations")
+        st.info("Réclamations UI")
+    else:
+        st.info(f"Tab {i} ({role} access)")
+
+
+
 # ============================================
 st.set_page_config(
     page_title="Hotel Mediterranee", 
@@ -729,19 +734,99 @@ def logout():
     # Clear query params on logout
     st.query_params.clear()
 
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarar une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+=======
 # ============================================
 # NAVIGATION ENTRE LES TABS
 # ============================================
+
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        # Set active tab based on session state
+        active_tab = st.session_state.get("active_tab", 0)
+        if 0 <= active_tab < len(tabs):
+            # Streamlit doesn't support setting active tab directly, 
+            # but we can use the tabs as-is and handle navigation in content
+            pass
+        return tab_names, tabs
+
+def navigate_to_section(section_name):
+    """Navigate to a section by setting view_section"""
+    st.session_state["view_section"] = section_name
+=======
+
+        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+
+=======
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+=======
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        # Set active tab based on session state
+        active_tab = st.session_state.get("active_tab", 0)
+        if 0 <= active_tab < len(tabs):
+            # Streamlit doesn't support setting active tab directly, 
+            # but we can use the tabs as-is and handle navigation in content
+            pass
+        return tab_names, tabs
+
+def navigate_to_section(section_name):
+    """Navigate to a section by setting view_section"""
+    st.session_state["view_section"] = section_name
+=======
+
+=======
+def get_tabs_for_role():\n    if is_maintenance():\n        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    else:  # Admin\n        tab_names = [\n            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", \n            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"\n        ]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
+=======
+def get_tabs_for_role():\n    if is_maintenance():\n        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    else:  # Admin\n        tab_names = [\n            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", \n            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"\n        ]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
+
 def navigate_to_tab(tab_index):
     """Navigate to a specific tab by index"""
     st.session_state["active_tab"] = tab_index
     st.rerun()
-
-def get_tabs_for_role():
-    """Return tabs configuration based on user role"""
-    if is_maintenance():
-        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
-        return tab_names, st.tabs(tab_names)
+=======
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+=======
     elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
     else:  # Admin
         tab_names = [
@@ -844,6 +929,10 @@ def load_maintenance_tasks():
             df["duree_reelle_minutes"] = 0.0
         if "type_panne" not in df.columns:
             df["type_panne"] = "Autre"
+# Ensure all columns exist with defaults
+        for col, default in {"priorite": "Moyenne", "duree_estimee_minutes": 0.0, "duree_reelle_minutes": 0.0, "type_panne": "Autre"}.items():
+            if col not in df.columns:
+                df[col] = default
         # Force date_completion to string type to prevent dtype errors
         if "date_completion" in df.columns:
             df["date_completion"] = df["date_completion"].astype(str)
@@ -952,7 +1041,6 @@ def update_task_priorite(task_id, new_priorite):
     tasks = load_maintenance_tasks()
     tasks.loc[tasks["id"] == task_id, "priorite"] = new_priorite
     save_maintenance_tasks(tasks)
-    return tasks
     return tasks
 
 def delete_maintenance_task(task_id, add_notif=True):
@@ -1222,17 +1310,13 @@ def show_main_app():
     
     st.title("🏨 Hotel Mediterranee Hammamet")
     
-    # Get tabs based on role
-    tab_names, tabs = get_tabs_for_role()
+# Get tabs based on role
+    role = st.session_state.get("user_role", "")
+    tabs = get_tabs_for_role()
     
-    if is_maintenance():
-        tab1, tab2 = tabs
-    elif is_receptionist():
-        tab_recep1, tab_reservations, tab_recep2, tab_recep3 = tabs
-    else:\n        tab_dash, tab_reserv_admin, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
-    
-    # ========== DASHBOARD ==========
-    with tab1 if is_maintenance() else (tab_recep1 if is_receptionist() else tab_dash):
+    for i, tab in enumerate(tabs):
+        with tab:
+            render_tab_content(i, role)
         st.subheader("📊 Tableau de Bord - Vue d'Ensemble")
         
         # Load all data for comprehensive dashboard
@@ -1279,70 +1363,50 @@ def show_main_app():
         receptionist_users = len([u for u in users.values() if u["role"] == "reception"])
         
         # Initialize view section
-        if "view_section" not in st.session_state:
-            st.session_state["view_section"] = None
-        
-        # Main KPIs Section
-        st.markdown("### 🎯 Indicateurs Clés")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("📈 Taux d'Occupation", key="nav_occupancy", help="Cliquez pour voir les détails des chambres"):
-                st.session_state["view_section"] = "rooms"
-            st.metric("📈 Taux d'Occupation", f"{occupancy_rate:.1f}%", f"{occupied_rooms}/{total_rooms} chambres")
-        
-        with col2:
-            if st.button("🛏️ Chambres Disponibles", key="nav_available", help="Cliquez pour gérer les chambres"):
-                st.session_state["view_section"] = "rooms"
-            st.metric("🛏️ Chambres Disponibles", free_rooms, f"sur {total_rooms} total")
-        
-        with col3:
-            total_issues = reclamations_pending + tasks_pending
-            if st.button("⚠️ Problèmes Actifs", key="nav_issues", help="Cliquez pour voir les réclamations et tâches"):
-                st.session_state["view_section"] = "issues"
-            st.metric("⚠️ Problèmes Actifs", total_issues, f"{reclamations_pending} pannes + {tasks_pending} tâches")
-        
-        st.markdown("---")
-        
-        # Detailed Sections
-        st.markdown("### 📊 Sections Détaillées")
-        
-        # Row 1: Rooms & Reclamations
-        col_a1, col_a2 = st.columns(2)
-        
-        with col_a1:
-            st.markdown("#### 🛏️ **Chambres**")
-            room_cols = st.columns(2)
-            with room_cols[0]:
-                if st.button("🏨 Total Chambres", key="nav_total_rooms"):
-                    st.session_state["view_section"] = "rooms"
-                st.metric("🏨 Total", total_rooms)
-                
-                if st.button("🔧 En Maintenance", key="nav_maint_rooms"):
-                    st.session_state["view_section"] = "rooms"
-                st.metric("🔧 Maintenance", maintenance_rooms)
-            
-            with room_cols[1]:
-                if st.button("✅ Libres", key="nav_free_rooms"):
-                    st.session_state["view_section"] = "rooms"
-                st.metric("✅ Libres", free_rooms)
-                
-                if st.button("🔒 Occupées", key="nav_occupied_rooms"):
-                    st.session_state["view_section"] = "rooms"
-                st.metric("🔒 Occupées", occupied_rooms)
-        
-        with col_a2:
-            st.markdown("#### 🔴 **Réclamations**")
-            rec_cols = st.columns(2)
-            with rec_cols[0]:
-                if st.button("⏳ En Attente", key="nav_rec_pending"):
-                    navigate_to_section("reclamations")
-                st.metric("⏳ En Attente", reclamations_pending)
-            
-            with rec_cols[1]:
-                if st.button("🔄 En Traitement", key="nav_rec_progress"):
-                    navigate_to_section("reclamations")
-                st.metric("🔄 En Traitement", reclamations_in_progress)
+    if "view_section" not in st.session_state:
+        st.session_state["view_section"] = None
+
+    # Main KPIs Section
+    st.markdown("### 🎯 Indicateurs Clés")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("📈 Taux d'Occupation", f"{occupancy_rate:.1f}%", f"{occupied_rooms}/{total_rooms} chambres")
+
+    with col2:
+        st.metric("🛏️ Chambres Disponibles", free_rooms, f"sur {total_rooms} total")
+
+    with col3:
+        total_issues = reclamations_pending + tasks_pending
+        st.metric("⚠️ Problèmes Actifs", total_issues, f"{reclamations_pending} pannes + {tasks_pending} tâches")
+
+    st.markdown("---")
+
+    # Detailed Sections
+    st.markdown("### 📊 Sections Détaillées")
+
+    # Row 1: Rooms & Reclamations
+    col_a1, col_a2 = st.columns(2)
+
+    with col_a1:
+        st.markdown("#### 🛏️ **Chambres**")
+        room_cols = st.columns(2)
+        with room_cols[0]:
+            st.metric("🏨 Total", total_rooms)
+            st.metric("🔧 Maintenance", maintenance_rooms)
+
+        with room_cols[1]:
+            st.metric("✅ Libres", free_rooms)
+            st.metric("🔒 Occupées", occupied_rooms)
+
+    with col_a2:
+        st.markdown("#### 🔴 **Réclamations**")
+        rec_cols = st.columns(2)
+        with rec_cols[0]:
+            st.metric("⏳ En Attente", reclamations_pending)
+
+        with rec_cols[1]:
+            st.metric("🔄 En Traitement", reclamations_in_progress)
         
         st.markdown("---")
         
@@ -1533,6 +1597,15 @@ def show_main_app():
                 with col_nav2:
                     if st.button("❌ Fermer", key="close_maintenance"):
                         st.session_state["view_section"] = None
+    
+    # ========== RÉSERVATIONS TABS ==========
+    if is_receptionist():
+        with tab_reservations:
+            reservations_tab("receptionniste", rooms)
+    
+    elif is_admin():
+        with tab_reserv_admin:
+            reservations_tab("admin", rooms)
     
     # ========== TAB RÉCEPTIONNISTE: DÉCLARER UNE PANNE ==========
     if is_receptionist():
@@ -1977,13 +2050,16 @@ def show_main_app():
             if filter_priorite != "Tous":
                 filtered_tasks = filtered_tasks[filtered_tasks["priorite"] == filter_priorite]
             
-            # Trier par priorité (Haute > Moyenne > Basse)
+# Safe priority sort with fallback
             priority_order = {"Haute": 0, "Moyenne": 1, "Basse": 2}
-            # Ensure priorite column exists and has valid values
+            filtered_tasks = filtered_tasks.sort_values(["date_creation"], ascending=[False])  # Default sort
             if "priorite" in filtered_tasks.columns and len(filtered_tasks) > 0:
                 filtered_tasks["priorite"] = filtered_tasks["priorite"].fillna("Moyenne")
-                filtered_tasks["priority_sort"] = filtered_tasks["priorite"].map(priority_order).fillna(1)
-                filtered_tasks = filtered_tasks.sort_values(["priority_sort", "date_creation"], ascending=[True, False]).drop("priority_sort", axis=1)
+                try:
+                    filtered_tasks["priority_sort"] = filtered_tasks["priorite"].map(priority_order).fillna(1)
+                    filtered_tasks = filtered_tasks.sort_values(["priority_sort", "date_creation"], ascending=[True, False]).drop("priority_sort", axis=1)
+                except:
+                    pass  # Keep default sort
             
             if len(filtered_tasks) > 0:
                 for idx, task in filtered_tasks.iterrows():
