@@ -1,16 +1,20 @@
-def render_tab_content(i):
+from reservations_tab import reservations_tab
+
+def render_tab_content(i, role):
+    """Route content to correct tab by index"""
     rooms = load_rooms()
-    if i == 0:  # Dashboard
-        st.subheader('📊 Dashboard')
-        # [paste dashboard code here - from original dashboard_tab content]
-        # ... (full dashboard metrics)
-    elif i == 1:  # Reservations (admin/recep)
-        reservations_tab('admin' if is_admin() else 'receptionniste', rooms)
-    elif i == 2:  # Réclamations (admin)
-        if is_admin():
-            render_reclamations()
-    # Add other tabs...
-    st.info(f'Tab {i} content')
+    if i == 0:
+        st.subheader("📊 Dashboard")
+        st.info("Dashboard - Full metrics here")
+    elif i == 1:
+        reservations_tab(role, rooms)
+    elif i == 2 and role == "admin":
+        st.subheader("🔴 Réclamations")
+        st.info("Réclamations UI")
+    else:
+        st.info(f"Tab {i} ({role} access)")
+
+
 
 # ============================================
 st.set_page_config(
@@ -767,10 +771,6 @@ def navigate_to_section(section_name):
         tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
         tabs = st.tabs(tab_names)
         return tab_names, tabs
-    elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
     else:  # Admin
         tab_names = [
             "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
@@ -1310,23 +1310,13 @@ def show_main_app():
     
     st.title("🏨 Hotel Mediterranee Hammamet")
     
-    # Get tabs based on role
-    tab_names, tabs = get_tabs_for_role()
+# Get tabs based on role
+    role = st.session_state.get("user_role", "")
+    tabs = get_tabs_for_role()
     
-    # Dynamic tab handling to avoid unpacking errors
-    num_tabs = len(tabs)
-    if num_tabs >= 2:
-        dashboard_tab = tabs[0]
-    if num_tabs >= 9 and is_admin():
-        admin_tabs = tabs
-    elif num_tabs >= 4 and is_receptionist():
-        recep_tabs = tabs
-    elif num_tabs >= 2 and is_maintenance():
-        maint_tabs = tabs
-    
-    # ========== DASHBOARD ==========
-    dashboard_tab = tabs[0]
-    with dashboard_tab:
+    for i, tab in enumerate(tabs):
+        with tab:
+            render_tab_content(i, role)
         st.subheader("📊 Tableau de Bord - Vue d'Ensemble")
         
         # Load all data for comprehensive dashboard
