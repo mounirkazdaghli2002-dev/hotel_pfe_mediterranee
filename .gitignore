@@ -12,3 +12,7 @@ __pycache__/
 *.db
 !hotel_mediterranee.db  # Keep main DB if needed
 
+# Backups
+*.backup
+*.corrupted.*
+
