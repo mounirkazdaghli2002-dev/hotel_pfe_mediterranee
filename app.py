@@ -734,12 +734,7 @@ def logout():
     # Clear query params on logout
     st.query_params.clear()
 
-    elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarar une Panne", "🛏️ Gestion Chambres"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
-    else:  # Admin
-        tab_names = [
+
 =======
 # ============================================
 # NAVIGATION ENTRE LES TABS
