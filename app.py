@@ -1228,8 +1228,8 @@ def show_main_app():
     if is_maintenance():
         tab1, tab2 = tabs
     elif is_receptionist():
-        tab_recep1, tab_reservations, tab_recep2, tab_recep3 = tabs
-    else:\n        tab_dash, tab_reserv_admin, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
+tab_recep1, tab_recep_res, tab_recep2, tab_recep3 = tabs
+tab_dash, tab_reservations, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
     
     # ========== DASHBOARD ==========
     with tab1 if is_maintenance() else (tab_recep1 if is_receptionist() else tab_dash):
