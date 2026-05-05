@@ -1,0 +1,8 @@
+id,nom_client,numero_chambre,date_arrivee,date_depart,nbre_nuits,telephone,email,statut,prix_nuit,total_prix,checkin_time,checkout_time,notes
+1,BEN SLAMA FATEN,1001,2026-03-06,2026-03-31,25,,faten@example.com,Confirmée,120.0,3000.0,14:00,12:00,"Client fidèle"
+2,mounir,1002,2026-03-06,2026-03-17,11,,mounir@example.com,Confirmée,120.0,1320.0,15:00,11:00,
+3,Sarah Mansour,103,2026-04-15,2026-04-20,5,21654321,sarah@example.com,En attente,120.0,600.0,14:00,12:00,"Suite upgrade requested"
+4,Karim Zouari,201,2026-04-28,2026-04-30,2,,karim@example.com,Confirmée,350.0,700.0,16:00,12:00,"Business trip"
+5,Ahmed Ben Ali,A1,2026-05-01,2026-05-05,4,,ahmed@example.com,Confirmée,500.0,2000.0,14:00,12:00,"Appartement familial"
+6,Nouveau Client Test,105,2026-05-10,2026-05-12,2,98765432,test@example.com,En attente,120.0,240.0,14:00,12:00,"Test reservation"
+
