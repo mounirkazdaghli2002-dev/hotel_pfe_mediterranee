@@ -592,11 +592,11 @@ def get_tabs_for_role():
         tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
         return tab_names, st.tabs(tab_names)
     elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tab_names = ["🏠 Dashboard", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres", "📅 Réservations"]
         return tab_names, st.tabs(tab_names)
     else:  # Admin
         tab_names = [
-            "🏠 Dashboard", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
             "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
         ]
         tabs = st.tabs(tab_names)
