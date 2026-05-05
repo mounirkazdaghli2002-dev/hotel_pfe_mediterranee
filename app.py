@@ -732,12 +732,22 @@ def logout():
 # ============================================
 # NAVIGATION ENTRE LES TABS
 # ============================================
+def get_tabs_for_role():
+    if is_maintenance():
+        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
     elif is_receptionist():
         tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
         tabs = st.tabs(tab_names)
         return tab_names, tabs
     else:  # Admin
         tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
 =======
 def get_tabs_for_role():\n    if is_maintenance():\n        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs\n    else:  # Admin\n        tab_names = [\n            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", \n            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"\n        ]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
 =======
