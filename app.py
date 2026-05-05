@@ -732,29 +732,62 @@ def logout():
 # ============================================
 # NAVIGATION ENTRE LES TABS
 # ============================================
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+=======
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        # Set active tab based on session state
+        active_tab = st.session_state.get("active_tab", 0)
+        if 0 <= active_tab < len(tabs):
+            # Streamlit doesn't support setting active tab directly, 
+            # but we can use the tabs as-is and handle navigation in content
+            pass
+        return tab_names, tabs
+=======
+def get_tabs_for_role():
+    if is_maintenance():
+        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+    else:  # Admin
+        tab_names = [
+            "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
+            "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
+        ]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+
 def navigate_to_tab(tab_index):
     """Navigate to a specific tab by index"""
     st.session_state["active_tab"] = tab_index
     st.rerun()
-
-def get_tabs_for_role():
-    """Return tabs configuration based on user role"""
-    if is_maintenance():
-        tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
-        return tab_names, st.tabs(tab_names)
-    elif is_receptionist():
-        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
-        tabs = st.tabs(tab_names)
-        return tab_names, tabs
->>>>>>> main
 =======
     elif is_receptionist():
         tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
         tabs = st.tabs(tab_names)
         return tab_names, tabs
+    else:  # Admin
+        tab_names = [
 =======
     elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
->>>>>>> main
     else:  # Admin
         tab_names = [
             "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
@@ -1245,7 +1278,8 @@ def show_main_app():
         tab1, tab2 = tabs
     elif is_receptionist():
         tab_recep1, tab_reservations, tab_recep2, tab_recep3 = tabs
-    else:\n        tab_dash, tab_reserv_admin, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
+    else:
+tab_dash, tab_reserv_admin, tab_reclamations, tab_rooms, tab_maint, tab_pannes, tab_composants, tab_agents, tab_users = tabs
     
     # ========== DASHBOARD ==========
     with tab1 if is_maintenance() else (tab_recep1 if is_receptionist() else tab_dash):
