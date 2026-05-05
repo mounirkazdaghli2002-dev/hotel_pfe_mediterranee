@@ -1,17 +1,28 @@
-# TODO Steps for Fixing Tab Unpacking Error
+# Hotel Mediterranee - Fix Progress ✅
 
-## Plan Breakdown (Approved)
-1. [x] **Create TODO.md** - Track progress ✓
-2. [x] **Edit app.py** - Fix unpack line in show_main_app() to use exactly 9 variables matching admin tabs ✓
-3. [ ] **Verify fix** - Check all tab usages use the correct variables
-4. [ ] **Test app** - Run `streamlit run app.py` and test as admin user
-5. [ ] **Complete** - Use attempt_completion
-3. [ ] **Verify fix** - Check all tab usages use the correct variables
-4. [ ] **Test app** - Run `streamlit run app.py` and test as admin user
-5. [ ] **Complete** - Use attempt_completion
+## Approved Plan Status
+1. ✅ **TODO.md** created/updated
+2. ✅ **Edit app.py** - 
+   - Remove duplicate `get_tabs_for_role()` ✓
+   - Fix tab unpacking → dynamic `tabs[i]` ✓
+   - Integrate `reservations_tab()` ✓
+   | Tab | Content |
+   |-----|---------|
+   | 0 | Dashboard stub |
+   | 1 | Reservations ✓ |
+   | others | Stub |
+3. ⏳ **Test** - https://mediteranee.streamlit.app/
 
-## Progress
-- Plan approved by user
-- Next: Edit app.py
+3. ⏳ **Test changes** - Deployed app: https://mediteranee.streamlit.app/
+4. ⏳ **Verify**:
+   | Role | Expected |
+   |------|----------|
+   | Admin | 9 tabs, Reservations (tab1) works |
+   | Receptionniste | 4 tabs, Reservations (tab1) CRUD |
+5. ⏳ **attempt_completion**
 
+## Next
+- Edit app.py now
+- User tests deployed app
+- Mark complete
 
