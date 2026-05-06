@@ -729,38 +729,32 @@ def logout():
     # Clear query params on logout
     st.query_params.clear()
 
-# ============================================
-# NAVIGATION ENTRE LES TABS
-# ============================================
-def navigate_to_tab(tab_index):
-    """Navigate to a specific tab by index"""
-    st.session_state["active_tab"] = tab_index
-    st.rerun()
-
 def get_tabs_for_role():
     """Return tabs configuration based on user role"""
+    
     if is_maintenance():
         tab_names = ["🏠 Dashboard", "🔧 Mes Tâches"]
-        return tab_names, st.tabs(tab_names)
-    elif is_receptionist():\n        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]\n        tabs = st.tabs(tab_names)\n        return tab_names, tabs
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+
+    elif is_receptionist():
+        tab_names = ["🏠 Dashboard", "📅 Réservations", "🔴 Déclarer une Panne", "🛏️ Gestion Chambres"]
+        tabs = st.tabs(tab_names)
+        return tab_names, tabs
+
     else:  # Admin
         tab_names = [
             "🏠 Dashboard", "📅 Réservations", "🔴 Réclamations", "🛏️ Chambres", "🔧 Maintenance", 
             "⚙️ Pannes", "🔩 Composants", "👥 Agents", "👤 Utilisateurs"
         ]
         tabs = st.tabs(tab_names)
+
         # Set active tab based on session state
         active_tab = st.session_state.get("active_tab", 0)
         if 0 <= active_tab < len(tabs):
-            # Streamlit doesn't support setting active tab directly, 
-            # but we can use the tabs as-is and handle navigation in content
-            pass
+            pass  # placeholder
+
         return tab_names, tabs
-
-def navigate_to_section(section_name):
-    """Navigate to a section by setting view_section"""
-    st.session_state["view_section"] = section_name
-
 # ============================================
 # GESTION DES CHAMBRES
 # ============================================
