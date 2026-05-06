@@ -592,10 +592,18 @@ def create_reservation(nom_client, numero_chambre, date_arrivee, date_depart, te
     reservations = pd.concat([reservations, new_res], ignore_index=True)
     save_reservations(reservations)
     
+    def _format_date(dt):
+        if isinstance(dt, datetime):
+            return dt.date().isoformat()
+        if isinstance(dt, date):
+            return dt.isoformat()
+        parsed = pd.to_datetime(dt, errors='coerce')
+        return parsed.date().isoformat() if not pd.isna(parsed) else str(dt)
+    
     # Notification
     add_notification(
         "📅 Nouvelle réservation",
-        f"{nom_client} - Chambre {numero_chambre} ({date_arrivee.date()} → {date_depart.date()})",
+        f"{nom_client} - Chambre {numero_chambre} ({_format_date(date_arrivee)} → {_format_date(date_depart)})",
         "success",
         target_role="receptionniste"
     )
