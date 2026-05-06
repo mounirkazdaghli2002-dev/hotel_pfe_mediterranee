@@ -35,8 +35,22 @@ def check_and_restore_session():
     query_params = st.query_params
     
     if "session" in query_params and not st.session_state.get("logged_in", False):
-        try:
-            session_data = json.loads(query_params["session"])
+        session_value = query_params.get("session")
+        if isinstance(session_value, list):
+            session_value = session_value[0]
+
+        session_data = None
+        if session_value:
+            try:
+                decoded = base64.b64decode(session_value).decode('utf-8')
+                session_data = json.loads(decoded)
+            except Exception:
+                try:
+                    session_data = json.loads(session_value)
+                except Exception as e:
+                    print(f"Session restore error: {e}")
+
+        if session_data:
             username = session_data.get("username", "")
             users = load_users()
             
@@ -51,12 +65,9 @@ def check_and_restore_session():
                     st.session_state["username"] = username
                     st.session_state["user_role"] = users[username]["role"]
                     st.session_state["user_nom"] = users[username]["nom"]
-                    
-                    # Clear the query param after successful restore
-                    st.query_params.clear()
                     return True
-        except Exception as e:
-            print(f"Session restore error: {e}")
+        
+        return False
     
     return False
 
@@ -80,18 +91,47 @@ function saveSessionToURL(username, role, nom) {
         nom: nom,
         timestamp: Math.floor(Date.now() / 1000)
     };
+    const encoded = btoa(JSON.stringify(sessionData));
     
-    // Use Streamlit's setQueryParams via the native method
     if (window.Streamlit) {
-        const encoded = btoa(encodeURIComponent(JSON.stringify(sessionData)));
-        window.Streamlit.setQueryParams({session: encoded});
+        const params = new URLSearchParams(window.location.search);
+        params.set('session', encoded);
+        window.Streamlit.setQueryParams(Object.fromEntries(params.entries()));
     }
+    localStorage.setItem('hotel_session', encoded);
 }
 
-// Clear session from URL
 function clearSessionFromURL() {
     if (window.Streamlit) {
-        window.Streamlit.setQueryParams({});
+        const params = new URLSearchParams(window.location.search);
+        params.delete('session');
+        params.set('logout', '1');
+        window.Streamlit.setQueryParams(Object.fromEntries(params.entries()));
+    }
+    localStorage.removeItem('hotel_session');
+}
+
+function restoreSessionFromLocalStorage() {
+    const params = new URLSearchParams(window.location.search);
+    const currentSession = params.get('session');
+
+    if (params.get('logout') === '1') {
+        localStorage.removeItem('hotel_session');
+        params.delete('logout');
+        window.history.replaceState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
+        return;
+    }
+
+    if (currentSession) {
+        localStorage.setItem('hotel_session', currentSession);
+        return;
+    }
+
+    const storedSession = localStorage.getItem('hotel_session');
+    if (storedSession) {
+        params.set('session', storedSession);
+        window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
+        window.location.reload();
     }
 }
 
@@ -139,28 +179,30 @@ let lastNotificationTime = 0;
 
 function startNotificationPolling() {
     if (notificationCheckInterval) return;
+    restoreSessionFromLocalStorage();
     
     notificationCheckInterval = setInterval(async () => {
         try {
-            // Poll notifications.json directly using fetch
             const response = await fetch('notifications.json?t=' + Date.now());
             if (!response.ok) return;
             
             const notifications = await response.json();
             
-            // Get current user from page data
             const notifCountElem = document.getElementById('notification-count-data');
             if (!notifCountElem) return;
             
             const currentCount = parseInt(notifCountElem.getAttribute('data-count') || '0');
-            const currentTime = parseInt(notifCountElem.getAttribute('data-time') || '0');
             
-            // Check for new notifications
-            if (notifications.length > currentCount || (currentTime > lastNotificationTime && currentTime > 0)) {
+            if (notifications.length > currentCount) {
                 playNotificationSound();
                 showNewNotificationAlert();
                 lastNotificationCount = notifications.length;
-                lastNotificationTime = currentTime;
+                
+                if (window.Streamlit) {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('notif_poll', Date.now());
+                    window.Streamlit.setQueryParams(Object.fromEntries(params.entries()));
+                }
             }
         } catch(e) {
             console.log('Notification polling error:', e);
@@ -883,8 +925,9 @@ def logout():
     st.session_state["username"] = ""
     st.session_state["user_role"] = ""
     st.session_state["user_nom"] = ""
-    # Clear query params on logout
+    # Clear query params on logout and mark local storage removal
     st.query_params.clear()
+    st.query_params["logout"] = "1"
 
 def get_tabs_for_role():
     """Return tabs configuration based on user role"""
