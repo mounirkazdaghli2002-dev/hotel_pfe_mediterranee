@@ -671,7 +671,7 @@ def mark_reservation_arrived(res_id):
         return False, "La réservation doit être confirmée pour marquer l'arrivée."
 
     today = datetime.now().date()
-    if res_row['date_arrivee'].date() != today:
+    if pd.to_datetime(res_row['date_arrivee']).date() != today:
         return False, "Vous ne pouvez marquer l'arrivée que le jour de la réservation."
 
     reservations.loc[reservations['id'] == res_id, 'statut'] = 'Arrivé'
@@ -719,9 +719,9 @@ def check_availability(numero_chambre, date_debut, date_fin):
 def get_upcoming_checkins(today=datetime.now()):
     """Récupère les check-ins du jour"""
     reservations = load_reservations()
-    today_str = today.date()
+    today_ts = pd.to_datetime(today).normalize()
     checkins = reservations[
-        (reservations['date_arrivee'].dt.date == today_str) &
+        (reservations['date_arrivee'].dt.normalize() == today_ts) &
         (reservations['statut'] == 'Confirmée')
     ]
     return len(checkins)
@@ -984,15 +984,15 @@ def synchronize_room_status_with_reservations():
     """Synchronise les statuts des chambres avec les réservations déjà arrivées"""
     rooms = load_rooms()
     reservations = load_reservations()
-    today = datetime.now().date()
+    today = pd.to_datetime(datetime.now().date()).normalize()
 
     # Reset all non-maintenance rooms to Libre before réévaluation
     rooms.loc[rooms["statut"] != "Maintenance", "statut"] = "Libre"
 
     occupied_rooms = reservations[
         (reservations["statut"] == "Arrivé") &
-        (reservations["date_arrivee"].dt.date <= today) &
-        (reservations["date_depart"].dt.date > today)
+        (reservations["date_arrivee"].dt.normalize() <= today) &
+        (reservations["date_depart"].dt.normalize() > today)
     ]["numero_chambre"].astype(str).unique()
 
     if len(occupied_rooms) > 0:
