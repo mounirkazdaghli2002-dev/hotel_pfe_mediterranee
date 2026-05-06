@@ -20,6 +20,28 @@ st.set_page_config(
 )
 
 # ============================================
+# GESTION DES UTILISATEURS
+# ============================================
+def load_users():
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    else:
+        default_users = {
+            "admin": {"password": hashlib.sha256("admin123".encode()).hexdigest(), "role": "admin", "nom": "Chef Maintenance"},
+            "receptionniste": {"password": hashlib.sha256("reception123".encode()).hexdigest(), "role": "receptionniste", "nom": "Receptionniste"},
+            "maintenance": {"password": hashlib.sha256("maintenance123".encode()).hexdigest(), "role": "maintenance", "nom": "Agent Maintenance"}
+        }
+        save_users(default_users)
+        return default_users
+
+
+def save_users(users):
+    with open(USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(users, f, indent=4, ensure_ascii=False)
+
+
+# ============================================
 # SESSION PERSISTANCE USING QUERY PARAMS
 # ============================================
 def check_and_restore_session():
@@ -887,10 +909,6 @@ def load_users():
         }
         save_users(default_users)
         return default_users
-
-def save_users(users):
-    with open(USERS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(users, f, indent=4, ensure_ascii=False)
 
 def delete_user(username):
     """Supprime un utilisateur"""
