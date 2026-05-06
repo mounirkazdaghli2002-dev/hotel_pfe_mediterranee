@@ -608,7 +608,7 @@ def create_reservation(nom_client, numero_chambre, date_arrivee, date_depart, te
     
     reservations = pd.concat([reservations, new_res], ignore_index=True)
     save_reservations(reservations)
-    update_room_status(numero_chambre, "Occupée")
+    synchronize_room_status_with_reservations()
     
     def _format_date(dt):
         if isinstance(dt, datetime):
@@ -649,6 +649,7 @@ def delete_reservation(res_id):
     res_row = reservations[reservations['id'] == res_id].iloc[0]
     reservations = reservations[reservations['id'] != res_id]
     save_reservations(reservations)
+    synchronize_room_status_with_reservations()
     
     add_notification(
         "📅 Réservation annulée",
@@ -657,6 +658,35 @@ def delete_reservation(res_id):
     )
     
     return True, "Réservation annulée."
+
+
+def mark_reservation_arrived(res_id):
+    """Marque une réservation comme arrivée et occupe la chambre"""
+    reservations = load_reservations()
+    if res_id not in reservations['id'].values:
+        return False, "Réservation inexistante."
+
+    res_row = reservations[reservations['id'] == res_id].iloc[0]
+    if res_row['statut'] != 'Confirmée':
+        return False, "La réservation doit être confirmée pour marquer l'arrivée."
+
+    today = datetime.now().date()
+    if res_row['date_arrivee'].date() != today:
+        return False, "Vous ne pouvez marquer l'arrivée que le jour de la réservation."
+
+    reservations.loc[reservations['id'] == res_id, 'statut'] = 'Arrivé'
+    reservations.loc[reservations['id'] == res_id, 'checkin_time'] = datetime.now().strftime('%H:%M')
+    save_reservations(reservations)
+
+    update_room_status(res_row['numero_chambre'], 'Occupée')
+    add_notification(
+        "🛎️ Client arrivé",
+        f"#{res_id} - {res_row['nom_client']} est arrivé en chambre {res_row['numero_chambre']}",
+        "success",
+        target_role=["admin"]
+    )
+    return True, "Client marqué comme arrivé et chambre occupée."
+
 
 def check_availability(numero_chambre, date_debut, date_fin):
     """Vérifie si une chambre est disponible pour une période donnée"""
@@ -743,9 +773,10 @@ def reservations_tab(role, rooms):
         
         st.dataframe(filtered_res, use_container_width=True)
         
-        # Allow receptionists and admins to cancel reservations
+        # Allow receptionists and admins to cancel reservations or mark arrivals
         if role in ['receptionniste', 'admin']:
             st.markdown("---")
+            today = datetime.now().date()
             for idx, row in filtered_res.iterrows():
                 col1, col2 = st.columns(2)
                 with col1:
@@ -756,6 +787,15 @@ def reservations_tab(role, rooms):
                             st.rerun()
                         else:
                             st.error(msg)
+                with col2:
+                    if row['statut'] == 'Confirmée' and row['date_arrivee'].date() == today:
+                        if st.button(f"✅ Arrivé #{row['id']}", key=f"arrived_res_{row['id']}"):
+                            success, msg = mark_reservation_arrived(row['id'])
+                            if success:
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.error(msg)
     else:
         st.info("📭 Aucune réservation")
     
@@ -941,13 +981,24 @@ def update_room_status(room_num, new_statut):
     return rooms
 
 def synchronize_room_status_with_reservations():
-    """Synchronise les statuts des chambres avec les réservations actives"""
+    """Synchronise les statuts des chambres avec les réservations déjà arrivées"""
     rooms = load_rooms()
     reservations = load_reservations()
-    reserved_rooms = reservations[reservations["statut"] != "Annulée"]["numero_chambre"].astype(str).unique()
-    if len(reserved_rooms) > 0:
-        rooms.loc[rooms["numero"].isin(reserved_rooms), "statut"] = "Occupée"
-        save_rooms(rooms)
+    today = datetime.now().date()
+
+    # Reset all non-maintenance rooms to Libre before réévaluation
+    rooms.loc[rooms["statut"] != "Maintenance", "statut"] = "Libre"
+
+    occupied_rooms = reservations[
+        (reservations["statut"] == "Arrivé") &
+        (reservations["date_arrivee"].dt.date <= today) &
+        (reservations["date_depart"].dt.date > today)
+    ]["numero_chambre"].astype(str).unique()
+
+    if len(occupied_rooms) > 0:
+        rooms.loc[rooms["numero"].isin(occupied_rooms) & (rooms["statut"] != "Maintenance"), "statut"] = "Occupée"
+
+    save_rooms(rooms)
     return rooms
 
 # ============================================
