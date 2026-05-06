@@ -286,6 +286,14 @@ def add_notification(title, message, type_notif="info", target_role=None):
     
     return notifications
 
+def _notification_matches_role(target_role, current_role):
+    """Retourne vrai si la notification cible l'utilisateur"""
+    if target_role is None:
+        return True
+    if isinstance(target_role, list):
+        return current_role in target_role
+    return target_role == current_role
+
 def mark_notification_read(notif_id):
     """Marque une notification comme lue"""
     notifications = load_notifications()
@@ -303,13 +311,22 @@ def mark_all_notifications_read():
     save_notifications(notifications)
     return notifications
 
+def _notification_matches_role(target_role, current_role):
+    """Retourne vrai si la notification cible l'utilisateur"""
+    if target_role is None:
+        return True
+    if isinstance(target_role, list):
+        return current_role in target_role
+    return target_role == current_role
+
+
 def get_unread_count():
     """Retourne le nombre de notifications non lues"""
     notifications = load_notifications()
     current_role = st.session_state.get("user_role", "")
     
     if current_role:
-        user_notifications = [n for n in notifications if n.get("target_role") is None or n.get("target_role") == current_role]
+        user_notifications = [n for n in notifications if _notification_matches_role(n.get("target_role"), current_role)]
         return len([n for n in user_notifications if not n["read"]])
     
     return len([n for n in notifications if not n["read"]])
@@ -320,7 +337,7 @@ def get_user_notifications():
     current_role = st.session_state.get("user_role", "")
     
     if current_role:
-        return [n for n in notifications if n.get("target_role") is None or n.get("target_role") == current_role]
+        return [n for n in notifications if _notification_matches_role(n.get("target_role"), current_role)]
     
     return notifications
 
@@ -591,6 +608,7 @@ def create_reservation(nom_client, numero_chambre, date_arrivee, date_depart, te
     
     reservations = pd.concat([reservations, new_res], ignore_index=True)
     save_reservations(reservations)
+    update_room_status(numero_chambre, "Occupée")
     
     def _format_date(dt):
         if isinstance(dt, datetime):
@@ -600,12 +618,12 @@ def create_reservation(nom_client, numero_chambre, date_arrivee, date_depart, te
         parsed = pd.to_datetime(dt, errors='coerce')
         return parsed.date().isoformat() if not pd.isna(parsed) else str(dt)
     
-    # Notification
+    # Notifications for both reception and admin
     add_notification(
         "📅 Nouvelle réservation",
         f"{nom_client} - Chambre {numero_chambre} ({_format_date(date_arrivee)} → {_format_date(date_depart)})",
         "success",
-        target_role="receptionniste"
+        target_role=["receptionniste", "admin"]
     )
     
     return True, f"Réservation #{new_id} créée avec succès (Total: {total_prix} DT)"
@@ -725,8 +743,8 @@ def reservations_tab(role, rooms):
         
         st.dataframe(filtered_res, use_container_width=True)
         
-        # Admin delete actions
-        if role == 'admin':
+        # Allow receptionists and admins to cancel reservations
+        if role in ['receptionniste', 'admin']:
             st.markdown("---")
             for idx, row in filtered_res.iterrows():
                 col1, col2 = st.columns(2)
@@ -741,33 +759,36 @@ def reservations_tab(role, rooms):
     else:
         st.info("📭 Aucune réservation")
     
-    # Create new reservation
-    st.markdown("---")
-    with st.expander("➕ Nouvelle Réservation"):
-        with st.form("new_res_form" + ("_admin" if role == 'admin' else '')):
-            col_n1, col_n2 = st.columns(2)
-            with col_n1:
-                nom_client = st.text_input("👤 Nom Client")
-                num_chambre = st.selectbox("🛏️ Chambre", rooms[rooms["statut"] != "Maintenance"]["numero"].tolist())
-                date_arr = st.date_input("📅 Date Arrivée", value=datetime.now().date())
-            with col_n2:
-                date_dep = st.date_input("📅 Date Départ", value=datetime.now().date() + pd.Timedelta(days=1))
-                tel = st.text_input("📞 Téléphone")
-                email = st.text_input("📧 Email")
-            
-            notes = st.text_area("📝 Notes")
-            
-            if st.form_submit_button("✅ Créer"):
-                if date_arr >= date_dep:
-                    st.error("❌ Date départ doit être après date arrivée")
-                else:
-                    success, msg = create_reservation(nom_client, num_chambre, date_arr, date_dep, tel, email, "Confirmée", notes)
-                    if success:
-                        st.success(msg)
-                        st.balloons()
-                        st.rerun()
+    if role != 'admin':
+        st.markdown("---")
+        with st.expander("➕ Nouvelle Réservation"):
+            with st.form("new_res_form" + ("_admin" if role == 'admin' else '')):
+                col_n1, col_n2 = st.columns(2)
+                with col_n1:
+                    nom_client = st.text_input("👤 Nom Client")
+                    num_chambre = st.selectbox("🛏️ Chambre", rooms[rooms["statut"] != "Maintenance"]["numero"].tolist())
+                    date_arr = st.date_input("📅 Date Arrivée", value=datetime.now().date())
+                with col_n2:
+                    date_dep = st.date_input("📅 Date Départ", value=datetime.now().date() + pd.Timedelta(days=1))
+                    tel = st.text_input("📞 Téléphone")
+                    email = st.text_input("📧 Email")
+                
+                notes = st.text_area("📝 Notes")
+                
+                if st.form_submit_button("✅ Créer"):
+                    if date_arr >= date_dep:
+                        st.error("❌ Date départ doit être après date arrivée")
                     else:
-                        st.error(msg)
+                        success, msg = create_reservation(nom_client, num_chambre, date_arr, date_dep, tel, email, "Confirmée", notes)
+                        if success:
+                            st.success(msg)
+                            st.balloons()
+                            st.rerun()
+                        else:
+                            st.error(msg)
+    else:
+        st.markdown("---")
+        st.info("🔒 Lecture seule : l'administrateur peut consulter les réservations et recevoir des notifications, mais ne peut pas créer de réservations.")
 
 # ============================================
 # GESTION DES UTILISATEURS
@@ -917,6 +938,16 @@ def update_room_status(room_num, new_statut):
     rooms = load_rooms()
     rooms.loc[rooms["numero"] == str(room_num), "statut"] = new_statut
     save_rooms(rooms)
+    return rooms
+
+def synchronize_room_status_with_reservations():
+    """Synchronise les statuts des chambres avec les réservations actives"""
+    rooms = load_rooms()
+    reservations = load_reservations()
+    reserved_rooms = reservations[reservations["statut"] != "Annulée"]["numero_chambre"].astype(str).unique()
+    if len(reserved_rooms) > 0:
+        rooms.loc[rooms["numero"].isin(reserved_rooms), "statut"] = "Occupée"
+        save_rooms(rooms)
     return rooms
 
 # ============================================
@@ -1224,7 +1255,7 @@ def show_login():
 # PAGE PRINCIPALE
 # ============================================
 def show_main_app():
-    rooms = load_rooms()
+    rooms = synchronize_room_status_with_reservations()
     
     # Ajouter l'élément de données pour les notifications en temps réel
     unread_count = get_unread_count()
@@ -1625,10 +1656,13 @@ def show_main_app():
                     if st.button("❌ Fermer", key="close_maintenance"):
                         st.session_state["view_section"] = None
     
-    # ========== TAB RÉCEPTIONNISTE: RÉSERVATIONS ==========
+    # ========== TAB RÉSERVATIONS ==========
     if is_receptionist():
         with tab_reservations:
             reservations_tab("receptionist", rooms)
+    elif is_admin():
+        with tab_reserv_admin:
+            reservations_tab("admin", rooms)
     
     # ========== TAB RÉCEPTIONNISTE: DÉCLARER UNE PANNE ==========
     if is_receptionist():
