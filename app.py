@@ -1659,7 +1659,7 @@ def show_main_app():
     # ========== TAB RÉSERVATIONS ==========
     if is_receptionist():
         with tab_reservations:
-            reservations_tab("receptionist", rooms)
+            reservations_tab("receptionniste", rooms)
     elif is_admin():
         with tab_reserv_admin:
             reservations_tab("admin", rooms)
