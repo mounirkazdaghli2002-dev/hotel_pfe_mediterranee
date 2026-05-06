@@ -1,1 +1,145 @@
-[]
+[
+    {
+        "id": 15,
+        "title": "🛎️ Client arrivé",
+        "message": "#1 - toni est arrivé en chambre 1001",
+        "type": "success",
+        "date": "2026-05-06 16:15",
+        "read": false,
+        "target_role": [
+            "admin"
+        ]
+    },
+    {
+        "id": 14,
+        "title": "📅 Nouvelle réservation",
+        "message": "toni - Chambre 1001 (2026-05-06 → 2026-05-07)",
+        "type": "success",
+        "date": "2026-05-06 16:15",
+        "read": true,
+        "target_role": [
+            "receptionniste",
+            "admin"
+        ]
+    },
+    {
+        "id": 13,
+        "title": "🏨 Statut chambre modifié",
+        "message": "Chambre 1001: Occupée → Libre par Receptionniste",
+        "type": "warning",
+        "date": "2026-05-06 15:49",
+        "read": false,
+        "target_role": "admin"
+    },
+    {
+        "id": 12,
+        "title": "📅 Réservation annulée",
+        "message": "#1 - azzzzzzz - Chambre 1001",
+        "type": "warning",
+        "date": "2026-05-06 15:49",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 11,
+        "title": "📅 Nouvelle réservation",
+        "message": "azzzzzzz - Chambre 1001 (2026-05-06 → 2026-05-07)",
+        "type": "success",
+        "date": "2026-05-06 15:44",
+        "read": true,
+        "target_role": [
+            "receptionniste",
+            "admin"
+        ]
+    },
+    {
+        "id": 10,
+        "title": "📅 Réservation annulée",
+        "message": "#8 - vdfgfg - Chambre 1007",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 9,
+        "title": "📅 Réservation annulée",
+        "message": "#9 - kiko - Chambre 1010",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 8,
+        "title": "📅 Réservation annulée",
+        "message": "#7 - mimou - Chambre 1015",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 7,
+        "title": "📅 Réservation annulée",
+        "message": "#5 - Ahmed Ben Ali - Chambre A1",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 6,
+        "title": "📅 Réservation annulée",
+        "message": "#6 - Nouveau Client Test - Chambre 105",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 5,
+        "title": "📅 Réservation annulée",
+        "message": "#4 - Karim Zouari - Chambre 201",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 4,
+        "title": "📅 Réservation annulée",
+        "message": "#3 - Sarah Mansour - Chambre 103",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 3,
+        "title": "📅 Réservation annulée",
+        "message": "#2 - mounir - Chambre 1002",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 2,
+        "title": "📅 Réservation annulée",
+        "message": "#1 - BEN SLAMA FATEN - Chambre 1001",
+        "type": "warning",
+        "date": "2026-05-06 15:39",
+        "read": true,
+        "target_role": null
+    },
+    {
+        "id": 1,
+        "title": "📅 Nouvelle réservation",
+        "message": "kiko - Chambre 1010 (2026-05-06 → 2026-05-07)",
+        "type": "success",
+        "date": "2026-05-06 15:27",
+        "read": true,
+        "target_role": "receptionniste"
+    }
+]

@@ -6,8 +6,21 @@ from datetime import datetime, date
 import hashlib
 import base64
 from dotenv import load_dotenv
-import os
 load_dotenv()
+
+# ============================================
+# GESTION DES FICHIERS (CONFIGURABLE VIA .env)
+# ============================================
+DATA_DIR = os.getenv('DATA_DIR', '.')
+USERS_FILE = os.path.join(DATA_DIR, 'utilisateurs.json')
+ROOMS_FILE = os.path.join(DATA_DIR, 'chambres.csv')
+MAINTENANCE_FILE = os.path.join(DATA_DIR, 'maintenance_tasks.csv')
+NOTIFICATIONS_FILE = os.path.join(DATA_DIR, 'notifications.json')
+PANNES_FILE = os.path.join(DATA_DIR, 'pannes.csv')
+COMPOSANTS_FILE = os.path.join(DATA_DIR, 'composants_chambres.csv')
+RAPPORTS_FILE = os.path.join(DATA_DIR, 'rapports_taches.csv')
+RECLAMATIONS_FILE = os.path.join(DATA_DIR, 'reclamations.csv')
+RESERVATIONS_FILE = os.path.join(DATA_DIR, 'reservations.csv')
 
 # ============================================
 # CONFIGURATION PAGE
@@ -283,20 +296,6 @@ if (document.readyState === 'complete') {
     }
 </style>
 """, unsafe_allow_html=True)
-
-# ============================================
-# GESTION DES FICHIERS (CONFIGURABLE VIA .env)
-# ============================================
-DATA_DIR = os.getenv('DATA_DIR', '.')
-USERS_FILE = os.path.join(DATA_DIR, 'utilisateurs.json')
-ROOMS_FILE = os.path.join(DATA_DIR, 'chambres.csv')
-MAINTENANCE_FILE = os.path.join(DATA_DIR, 'maintenance_tasks.csv')
-NOTIFICATIONS_FILE = os.path.join(DATA_DIR, 'notifications.json')
-PANNES_FILE = os.path.join(DATA_DIR, 'pannes.csv')
-COMPOSANTS_FILE = os.path.join(DATA_DIR, 'composants_chambres.csv')
-RAPPORTS_FILE = os.path.join(DATA_DIR, 'rapports_taches.csv')
-RECLAMATIONS_FILE = os.path.join(DATA_DIR, 'reclamations.csv')
-RESERVATIONS_FILE = os.path.join(DATA_DIR, 'reservations.csv')
 
 def play_notification_sound():
     """Joue un son de notification (JavaScript universel)"""
